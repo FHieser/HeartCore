@@ -107,12 +107,15 @@ Cards live in YAML files under `cards/`, one file per domain plus one for found 
     level: 1               # only for kind: domain → 1–4
   slots: 1                 # loadout slots, default 1
   recall: 1                # Stress to recall from the vault mid-scene
-  text: >
-    Rules text. Activation, costs, duration and vault effects all go here.
+  text:                    # one entry per feature
+    - "First feature. Activation, costs, duration and vault effects all go here."
+    - "Second feature, if the card has one."
   flavor: "Optional flavor line."   # optional
 ```
 
 Found cards use `source: { kind: found }` and have no domain or level.
+
+`text` is a **list with one entry per feature**, even when the card has only one. Each entry is written on **one physical line** in double quotes, with no line breaks inside (a future frontend depends on this). Don't use `>` / `|` block styles or wrap long lines.
 
 Ideas for card text (not fields, but useful patterns):
 - Standard activations: Passive / costs Hope / costs Stress / X uses per rest / One-shot.
