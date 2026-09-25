@@ -1,0 +1,32 @@
+# Tech domain cards. Format: see Baseline.md → Cards → Card format.
+# Planned: 3 cards at level 1, 2 each at levels 2–4.
+# Level-1 directions: Repair, Access, Surveillance.
+
+# --- Level 1 ---
+
+- name: Duct Tape and a Prayer
+  type: ability
+  source: { kind: domain, domain: tech, level: 1 }
+  slots: 1
+  recall: 0
+  text:
+    - "Mark 1 Stress to get a broken device working for the rest of the scene. After that it's dead for good."
+    - "You can tell at a glance what's broken, what it needs and how long the fix takes. You have advantage on Finesse rolls to repair something."
+
+- name: Bypass
+  type: ability
+  source: { kind: domain, domain: tech, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "Advantage on rolls to get past locks, keycards and passwords. If you fail, you can mark 1 Stress to succeed anyway, but you set off an alarm."
+    - "When you access a terminal, ask the GM one of these questions: Where is the nearest exit? Where is what I'm looking for? Where am I?"
+
+- name: Wiretap
+  type: ability
+  source: { kind: domain, domain: tech, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "Turn on your motion tracker. Until the end of the scene, you know the direction and distance of everything moving within Close range, through walls, floors and ceilings, but not what it is. The first time each scene it picks something up, mark 1 Stress."
+    - "Put a bug or tracker on an object, person or creature within Melee. While it's within Very Far range, you know where it is and hear what's around it, until it's found or the session ends. You can have up to 3 bugs active at once."
