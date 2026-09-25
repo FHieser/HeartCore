@@ -1,0 +1,33 @@
+# Mind domain cards. Format: see Baseline.md → Cards → Card format.
+# Planned: 3 cards at level 1, 2 each at levels 2–4.
+# Level-1 directions: Knowledge, Perspective, Focus.
+
+# --- Level 1 ---
+
+- name: I've Read About This
+  type: ability
+  source: { kind: domain, domain: mind, level: 1 }
+  slots: 1
+  recall: 0
+  text:
+    - "Spend 1 Hope to state a fact about an object, place, procedure or anomaly. The GM makes it true, or tells you what's closest to the truth."
+    - "Choose a field: medicine, engineering, chemistry, occultism, law, etc. You have advantage on Knowledge rolls in that field."
+
+- name: The Big Picture
+  type: ability
+  source: { kind: domain, domain: mind, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "Once per rest, mark 1 Stress to step back and reassess. The GM tells you one way out of the current situation that no one has considered: an escape route, another approach, an overlooked resource."
+    - "When you've seen the same thing happen twice (an attack, a hazard, a patrol route, an anomaly's behavior), name it as a pattern. Until the end of the scene, choose one: +2 Evasion against it, or +2 to rolls to avoid, bypass, time or attack it. You can track one pattern at a time."
+
+- name: In the Zone
+  type: ability
+  source: { kind: domain, domain: mind, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "When you roll with Hope on a Finesse or Knowledge roll, you can stay locked in: your next roll on the same task gets +2."
+    - "Once per scene, while you're working on a task, ignore 1 Stress from something you see or hear."
+    - "Fear and pressure don't give you disadvantage on Finesse rolls. Your hands don't shake."
