@@ -1,0 +1,32 @@
+# Body domain cards. Format: see Baseline.md → Cards → Card format.
+# Planned: 3 cards at level 1, 2 each at levels 2–4.
+# Level-1 directions: Force, Speed, Endurance.
+
+# --- Level 1 ---
+
+- name: Brute Force
+  type: ability
+  source: { kind: domain, domain: body, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "Mark 1 Stress to brace a door, hatch or barrier. Until you let go, nothing gets through without dealing with you first. While holding, you can't do anything else."
+    - "Once per rest, break through an obstacle (door, wall panel, restraints, locked cabinet) without a roll. It's loud: the GM gains 1 Fear."
+
+- name: Light on Your Feet
+  type: ability
+  source: { kind: domain, domain: body, level: 1 }
+  slots: 1
+  recall: 0
+  text:
+    - "You have advantage on Agility rolls to climb, jump, squeeze through or slide under. Difficult terrain doesn't slow you down."
+    - "When a threat appears, you can immediately move within Close range before anyone else acts."
+
+- name: Thick Skin
+  type: ability
+  source: { kind: domain, domain: body, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "Your Major damage threshold increases by 2."
+    - "Once per scene, when you mark HP, gain 1 Hope."
