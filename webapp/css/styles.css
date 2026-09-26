@@ -280,6 +280,24 @@ a.tile:hover { border-color: var(--domain); }
 
 .domains-intro .ring { margin-top: 1.5rem; }
 
+.domain-list { list-style: none; margin-top: 1.2rem; border-top: 1px solid var(--line); }
+.domain-list li {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr) auto;
+  gap: 0.3rem 1.2rem;
+  align-items: baseline;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.domain-list a { color: var(--domain); font-size: 1.1rem; text-decoration: none; }
+.domain-list a:hover { text-decoration: underline; }
+@media (max-width: 520px) {
+  .domain-list li { grid-template-columns: 1fr auto; }
+  .domain-list li > span:not(.eyebrow) { grid-column: 1 / -1; grid-row: 2; }
+}
+
 .domain-section { scroll-margin-top: 1rem; margin-top: 4rem; }
 .domain-head { border-top: 3px solid var(--domain); padding-top: 1.2rem; }
 .domain-head h2 {

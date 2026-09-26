@@ -436,8 +436,14 @@ async function initDomains() {
       <section class="domains-intro">
         <p class="eyebrow">HeartCore</p>
         <h1>Domains</h1>
-        <p class="lede">Every class takes two domains. Domain cards go from level 1 to 4.</p>
-        ${renderRing(domains, classes)}
+        <ul class="domain-list">
+          ${entries.map(({ domain, groups, color }) => `
+            <li style="--domain:${color}">
+              <a href="#${domain.id}">${escapeHtml(domain.name)}</a>
+              <span>${escapeHtml(domain.covers)}</span>
+              <span class="eyebrow">${plural(groups.reduce((n, [, l]) => n + l.length, 0), 'card')}</span>
+            </li>`).join('')}
+        </ul>
       </section>
       ${entries.map(e => renderDomainSection(e, classes)).join('')}
     `;
