@@ -1,0 +1,23 @@
+# Aid domain cards. Format: see Baseline.md → Cards → Card format.
+# Planned: 3 cards at level 1, 2 each at levels 2–4.
+# Level-1 directions: First Aid, Calm, Cover.
+
+# --- Level 1 ---
+
+- name: Medical Duty
+  type: ability
+  source: { kind: domain, domain: aid, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "Spend 1 Hope to clear 1 HP on yourself or an ally within Melee. You have 3 uses per long rest. When you use the last one, the GM gains 1 Fear."
+    - "Once per scene, when an ally within Close range marks 2 or more HP at once, gain 1 Hope."
+
+- name: Get Down!
+  type: ability
+  source: { kind: domain, domain: aid, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "Once per scene, when you would take damage and there's something to hide behind (a wall, a car, a counter, a door), duck into cover: gain 1 Armor Slot and mark it immediately to reduce that damage. You can mark 1 Stress to pull an ally within Very Close range into cover with you: the next time they would take damage this scene while still in that cover, they also gain 1 Armor Slot and mark it immediately."
+    - "While you're between an ally and a threat, it has disadvantage on attacks against that ally."
