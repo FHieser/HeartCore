@@ -233,23 +233,11 @@ async function initOverview() {
     const all = [...domains, FOUND];
     const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
     const total = cardLists.reduce((n, l) => n + l.length, 0);
-    const byId = Object.fromEntries(domains.map((d, i) => [d.id, i]));
 
     const intro = sections._intro
       .split('\n')
       .filter(l => l.trim() && !/^(#|>|\*A )/.test(l.trim()))
       .join('\n');
-
-    const classCards = classes.map(c => `
-      <div class="class-card">
-        <a class="class-name" href="classes.html#${c.id}">${escapeHtml(c.name)}</a>
-        <span class="class-domains">${domainTags(c.domains, domains)}</span>
-        ${c.fantasy ? `<span class="class-line">${escapeHtml(c.fantasy)}</span>` : ''}
-        <ul class="class-features">
-          ${FEATURE_KINDS.map(([kind, , short]) => `
-            <li><span>${short}</span> ${escapeHtml(c.features[kind].name || '(unnamed)')}</li>`).join('')}
-        </ul>
-      </div>`).join('');
 
     root.innerHTML = `
       <section>
@@ -272,7 +260,13 @@ async function initOverview() {
       </a>
 
       <h2>Classes</h2>
-      <div class="grid">${classCards}</div>
+      <a class="link-field" href="classes.html">
+        <span class="link-field-title">All classes →</span>
+        <span class="link-field-domains">
+          ${classes.map(c => `<span style="--domain:#9a9a9a">${escapeHtml(c.name)}</span>`).join('')}
+        </span>
+        <span class="eyebrow">${classes.length} ${classes.length === 1 ? 'class' : 'classes'}</span>
+      </a>
     `;
   } catch (err) {
     showError(root, err);
