@@ -1,0 +1,28 @@
+# Mechanic class. Format: see .claude/create-class.md → Class format.
+
+name: Mechanic
+domains: [body, tech]
+fantasy: "The fixer. Gets the generator running and builds what the moment needs from junk."
+examples: [field engineer, electrician, janitor, car mechanic, handyman]
+
+features:
+  main:
+    name: MacGyver
+    text:
+      - "Collect Scrap on rolls with Hope. Scrap refills on a short rest. Spend Scrap to build things."
+  flair:
+    # name: (open)
+    text:
+      - "Advantage on rolls to understand, follow or navigate tech and infrastructure (vents, fuse boxes, maintenance tunnels, wiring)."
+  hope:
+    name: Not Pretty, But It'll Do
+    cost: 3
+    text:
+      - "Create a Scrap build on the spot without spending Scrap. It breaks immediately after one use."
+
+loop: "Rolls with Hope give Scrap, Scrap builds things; the Hope feature builds for free, but only once."
+open:
+  - "Max Scrap; does a short rest refill to a set amount or to max?"
+  - "What can be built, and at what Scrap cost?"
+  - "Can other characters (e.g. the Scientist with Tech cards) use Scrap?"
+  - "Name for the Flair."

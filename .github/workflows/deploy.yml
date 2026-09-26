@@ -35,6 +35,8 @@ jobs:
           cp Baseline.md _site/
           [ -f Mechanics.md ] && cp Mechanics.md _site/ || true
           cp -r data _site/data
+          # Pages can't list folders: write the class file list for the webapp
+          (cd data/classes && ls *.yaml | jq -R . | jq -s .) > _site/data/classes/index.json
 
       - uses: actions/configure-pages@v5
         with:

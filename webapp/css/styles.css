@@ -330,6 +330,47 @@ a.tile:hover { border-color: var(--domain); }
 .kw { color: #e6e6e6; font-weight: bold; }
 .flavor { color: var(--faint); font-style: italic; font-size: 0.82rem; margin-top: auto; }
 
+/* ---------- Classes page ---------- */
+
+.class-name { text-decoration: none; }
+a.class-name:hover { color: var(--accent); }
+a.ring-class { text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+a.ring-class:hover { color: var(--text); border-color: #444; }
+.domain-classes a.tag { text-decoration: none; }
+.domain-classes a.tag:hover { color: var(--text); border-color: #444; }
+
+.class-section .domain-head { border-image: linear-gradient(90deg, var(--c1), var(--c2)) 1; }
+.class-section .domain-head .domain-classes a.tag { color: var(--domain); border-color: var(--domain); }
+.class-examples { color: var(--muted); font-size: 0.9rem; margin-top: 0.8rem; }
+.class-examples .eyebrow { margin-right: 0.4rem; }
+.class-cards { margin-top: 1.5rem; }
+
+.options {
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+  border-top: 1px dashed #222;
+  padding-top: 0.6rem;
+}
+.options li { padding-left: 0.8rem; position: relative; }
+.options li::before { content: '›'; position: absolute; left: 0; color: var(--faint); }
+.options strong { color: var(--text); font-weight: normal; }
+
+.class-notes {
+  margin-top: 1.2rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px dashed #222;
+  font-size: 0.88rem;
+  color: var(--muted);
+  max-width: 75ch;
+  display: grid;
+  gap: 0.5rem;
+}
+.class-notes .eyebrow { margin-right: 0.4rem; }
+.class-notes ul { padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+
 @media (max-width: 800px) {
   .layout { grid-template-columns: 1fr; gap: 0; }
   .sidebar {

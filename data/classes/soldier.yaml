@@ -1,0 +1,25 @@
+# Soldier class. Format: see .claude/create-class.md → Class format.
+
+name: Soldier
+domains: [body, aid]
+fantasy: "The protector. Stands between the others and the thing in the dark."
+examples: [marine, security guard, cop, firefighter, bouncer]
+
+features:
+  main:
+    name: Ward
+    text:
+      - "At the start of a scene, name one ally as your ward. While they're within Close range, you can mark your own Armor Slots to reduce damage they take."
+  flair:
+    name: Adrenaline
+    text:
+      - "When your Stress is maxed out, gain advantage on all Strength, Instinct and Agility rolls until the end of the scene or until your Stress is reduced. This overrides the usual max Stress penalties."
+      - "If the scene ends while your Stress is still maxed, Adrenaline stops and the normal penalties apply (the crash)."
+  hope:
+    name: Calm Under Pressure
+    cost: 3
+    text:
+      - "Clear 2 Stress."
+
+loop: "Adrenaline rewards maxed Stress, but Calm Under Pressure clears Stress and ends it. The player must choose between keeping the bonus and clearing Stress."
+open: []

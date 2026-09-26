@@ -5,6 +5,8 @@
 A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / modern sci-fi space. Characters can be trained professionals (containment staff, security, researchers) **or** ordinary people thrown into anomalous situations. Both use the same classes; only background and starting gear differ.
 
 > Status: early design draft. Items marked **(open)** are undecided.
+>
+> Detailed rules (ailments, …) live in [Mechanics.md](Mechanics.md).
 
 ---
 
@@ -62,7 +64,7 @@ Domain cards go from **level 1 to level 4 only**.
 | **Tech** | Tools, devices, repairs, hacking, comms, improvised gear. |
 | **Aid** | Healing, protecting, covering, calming others. Clears HP and Stress for allies. |
 
-Domains are arranged in a ring; each domain belongs to exactly two classes:
+The four starting classes arrange the domains in a ring; each domain belongs to exactly two classes. Later classes don't have to be neighbours on the ring.
 
 ```
    Body ── Mechanic ── Tech
@@ -95,8 +97,8 @@ Open:
 
 ### Card format
 
-Cards live in YAML files under `cards/`, one file per domain plus one for found cards:
-`cards/body.yaml`, `cards/mind.yaml`, `cards/tech.yaml`, `cards/aid.yaml`, `cards/found.yaml`.
+Cards live in YAML files under `data/`: one file per domain in `data/domains/`, found cards in `data/found/`:
+`data/domains/body.yaml`, `data/domains/mind.yaml`, `data/domains/tech.yaml`, `data/domains/aid.yaml`, `data/found/found.yaml`.
 
 ```yaml
 - name: Card Name          # required
@@ -135,6 +137,10 @@ Each class has:
 
 Subclasses / specializations are skipped for now.
 
+### Class files
+
+Classes live in `data/classes/`, one YAML file per class (`data/classes/soldier.yaml`, …). The webapp picks up every `.yaml` file in that folder. The file format is defined in the create-class command ([.claude/create-class.md](.claude/create-class.md)).
+
 ---
 
 ## Creating a Class (Workflow)
@@ -169,7 +175,7 @@ Check:
 
 Pick the two domains.
 
-- Every class takes **two neighboring domains** on the ring.
+- Every class takes **two domains**. They don't have to be neighbours on the ring.
 - Every domain must end up in **exactly two classes**.
 - When adding classes beyond the starting four, the ring (or the number of domains) has to be revisited. **(open)**
 
@@ -252,24 +258,7 @@ Name each feature last, once the mechanics are locked.
 
 ### Step 10: Write it up
 
-Document the class with the template below and add it to the class list and overview table.
-
-### Class template
-
-```markdown
-### [Class Name] ([Domain] + [Domain])
-
-*[Fantasy line.]*
-Examples: [professional examples], [civilian examples].
-
-- **Main, [Name]:** [Rules text.]
-- **Flair, [Name]:** [Rules text.]
-- **Hope feature, [Name] ([cost] Hope):** [Rules text.]
-
-Notes:
-- [Loop / tension between features.]
-- [Open questions, marked (open).]
-```
+Write the class as a new file `data/classes/<id>.yaml` using the format from the create-class command. Put the loop from Step 7 in `loop` and anything undecided in `open`. The webapp picks the file up automatically.
 
 ### Guardrails (apply to every class)
 
@@ -283,86 +272,14 @@ Notes:
 
 ## Classes
 
-### Soldier (Body + Aid)
+The classes live in [`data/classes/`](data/classes/), one YAML file each (format: see Class Structure → Class files). The starting four:
 
-*The protector. Stands between the others and the thing in the dark.*
-Examples: marine, security guard, cop, firefighter, bouncer.
-
-- **Main, Ward:** At the start of a scene, name one ally as your ward. While they're within Close range, you can mark your own Armor Slots to reduce damage they take.
-- **Flair, Adrenaline:** When your Stress is maxed out, gain advantage on all Strength, Instinct and Agility rolls until the end of the scene or until your Stress is reduced. This overrides the usual max Stress penalties. If the scene ends while your Stress is still maxed, Adrenaline stops and the normal penalties apply (the crash).
-- **Hope feature, Calm Under Pressure:** Clear 2 Stress.
-
-Note: Calm Under Pressure ends Adrenaline, so the player has to choose between keeping the bonus and clearing Stress.
-
----
-
-### Mechanic (Body + Tech)
-
-*The fixer. Gets the generator running and builds what the moment needs from junk.*
-Examples: field engineer, electrician, janitor, car mechanic, handyman.
-
-- **Main, MacGyver:** Collect **Scrap** on rolls with Hope. Scrap refills on a short rest. Spend Scrap to build things.
-- **Flair:** Advantage on rolls to understand, follow or navigate tech and infrastructure (vents, fuse boxes, maintenance tunnels, wiring).
-- **Hope feature, Not Pretty, But It'll Do:** Create a Scrap build on the spot without spending Scrap. It breaks immediately after one use.
-
-Open:
-- Max Scrap; does a short rest refill to a set amount or to max?
-- What can be built, and at what Scrap cost?
-- Can other characters (e.g. the Scientist with Tech cards) use Scrap?
-- Name for the Flair.
-
----
-
-### Scientist (Mind + Tech)
-
-*The analyst. Understands what's happening, and pays for it.*
-Examples: researcher, lab tech, grad student, journalist, hacker.
-
-- **Main, Hypothesis:** Spend 1 Hope to declare a reasonable hypothesis about an anomaly (e.g. "It's drawn to heat"). If the group's test confirms it, choose one bonus for the party. A wrong hypothesis only costs the Hope.
-  - Bonuses last until the anomaly is dealt with.
-  - Bonuses stack across different confirmed hypotheses (hypotheses must be reasonable, at GM discretion).
-  - **Bonus options:**
-    - **Steeled:** When the anomaly causes Stress, each party member marks 1 less.
-    - **Weak Spot:** Attacks against the anomaly deal +1 HP damage.
-    - **Predictable:** The party gains +1 Evasion against the anomaly's attacks.
-    - **Countermeasure:** Once per scene, one party member can ignore one of the anomaly's features.
-    - **Early Warning:** The anomaly can't surprise the party. The GM must show a sign before it acts.
-    - **Leverage:** Advantage on rolls to trap, evade or contain the anomaly.
-- **Flair, Cold Logic:** Each time you receive Stress from an anomaly, ask the GM one question from the list. They answer truthfully.
-  - What is it reacting to right now?
-  - What is it about to do?
-  - Where is it, or where is it coming from?
-  - What here is dangerous that I haven't noticed?
-  - Is it hurt, and how badly?
-  - What would make this worse?
-- **Hope feature, It Starts With a Plan (3 Hope):** Distribute 3 Hope among the other players.
-
----
-
-### Doctor (Mind + Aid)
-
-*The one making the hard calls. Keeps people alive, but can't save everyone.*
-Examples: paramedic, nurse, surgeon, psychologist, first aider.
-
-- **Main, Code Red:** At the start of a dangerous scene, name one ally as your priority. When you Help an Ally for them, add a d8 instead of a d6. You can switch your priority mid-scene. When you do, gain a Hope, and the previous priority marks a Stress (they know you've given up on them).
-- **Flair, House Call:** During a rest, choose one ally as your patient. They clear 1 additional HP or 1 additional Stress, and can choose from improved rest options.
-- **Hope feature, Unparalleled Concentration:** Gain advantage on Finesse, Instinct and Knowledge rolls until the end of the scene.
-
-Notes:
-- Loop: switching priority generates Hope, which fuels Unparalleled Concentration.
-- Unparalleled Concentration shares Instinct with the Soldier's Adrenaline. Possible swap to Presence if they should be fully distinct. **(open)**
-- "Improved rest options" still need to be defined. **(open)**
-
----
-
-## Class Overview
-
-| Class | Domains | Main | Flair | Hope feature |
-|---|---|---|---|---|
-| Soldier | Body + Aid | Ward | Adrenaline | Calm Under Pressure |
-| Mechanic | Body + Tech | MacGyver | Tech/infrastructure advantage | Not Pretty, But It'll Do |
-| Scientist | Mind + Tech | Hypothesis | Cold Logic | It Starts With a Plan |
-| Doctor | Mind + Aid | Code Red | House Call | Unparalleled Concentration |
+| Class | Domains | File |
+|---|---|---|
+| Soldier | Body + Aid | [soldier.yaml](data/classes/soldier.yaml) |
+| Mechanic | Body + Tech | [mechanic.yaml](data/classes/mechanic.yaml) |
+| Scientist | Mind + Tech | [scientist.yaml](data/classes/scientist.yaml) |
+| Doctor | Mind + Aid | [doctor.yaml](data/classes/doctor.yaml) |
 
 ---
 

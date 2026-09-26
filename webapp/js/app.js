@@ -127,21 +127,54 @@ async function loadDomains() {
   }));
 }
 
-// Classes from the "Class Overview" table, plus the fantasy line from "Classes".
-async function loadClasses() {
-  const s = await loadBaseline();
-  const lines = {};
-  for (const m of (s['Classes'] || '').matchAll(/^### (.+?) \(.+?\)\s*\n+\*(.+?)\*/gm)) {
-    lines[m[1].trim()] = m[2].trim();
+// [key in the class file, label, short label]
+const FEATURE_KINDS = [['main', 'Main', 'Main'], ['flair', 'Flair', 'Flair'], ['hope', 'Hope feature', 'Hope']];
+const asList = v => (Array.isArray(v) ? v : v ? [v] : []);
+
+// Ids of the .yaml files in a data folder, sorted. Static hosts can't list folders,
+// so this reads index.json (written by the deploy workflow) and falls back to the
+// directory listing that `python -m http.server` serves locally.
+async function listYaml(dir) {
+  const url = `${DATA_ROOT}${dir}/`;
+  let names;
+  try {
+    names = JSON.parse(await fetchText(`${url}index.json`));
+  } catch {
+    const html = await fetchText(url);
+    names = [...html.matchAll(/href="([^"?#/]+\.ya?ml)"/g)].map(m => decodeURIComponent(m[1]));
   }
-  return parseTable(s['Class Overview'] || '').map(([name, domains, main, flair, hope]) => ({
-    name: stripMd(name),
-    domains: stripMd(domains).split('+').map(d => slug(d)),
-    main: stripMd(main || ''),
-    flair: stripMd(flair || ''),
-    hope: stripMd(hope || ''),
-    line: lines[stripMd(name)] || '',
-  }));
+  return names.map(n => n.replace(/\.ya?ml$/, '')).sort();
+}
+
+// One file per class: data/classes/<id>.yaml.
+let classesPromise;
+function loadClasses() {
+  classesPromise ??= (async () => {
+    const ids = await listYaml('data/classes');
+    return Promise.all(ids.map(async id => {
+      const c = jsyaml.load(await fetchText(`${DATA_ROOT}data/classes/${id}.yaml`)) || {};
+      const features = c.features || {};
+      return {
+        id,
+        name: c.name || id,
+        domains: asList(c.domains).map(d => slug(String(d))),
+        fantasy: c.fantasy || '',
+        examples: asList(c.examples),
+        features: Object.fromEntries(FEATURE_KINDS.map(([kind]) => {
+          const f = features[kind] || {};
+          return [kind, {
+            name: f.name || '',
+            cost: kind === 'hope' ? f.cost ?? 3 : f.cost,
+            text: asList(f.text),
+            options: asList(f.options),
+          }];
+        })),
+        loop: c.loop || '',
+        open: asList(c.open),
+      };
+    }));
+  })();
+  return classesPromise;
 }
 
 // Cards of one domain (data/domains/<id>.yaml) or the found cards
@@ -167,7 +200,7 @@ function domainColor(id, index = 0) {
 function renderNav(current) {
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
-  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains']]
+  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes']]
     .map(([id, href, label]) => `<a href="${href}" class="${id === current ? 'current' : ''}">${label}</a>`)
     .join('');
 }
@@ -181,6 +214,14 @@ function showError(el, err) {
 }
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+// Coloured tags linking to each domain's section on the domains page.
+function domainTags(ids, domains) {
+  return ids.map(id => {
+    const i = domains.findIndex(d => d.id === id);
+    return i < 0 ? '' : `<a class="tag" href="domains.html#${id}" style="--domain:${domainColor(id, i)}">${escapeHtml(domains[i].name)}</a>`;
+  }).join('');
+}
 
 // ---------- Overview page ----------
 
@@ -201,18 +242,12 @@ async function initOverview() {
 
     const classCards = classes.map(c => `
       <div class="class-card">
-        <span class="class-name">${escapeHtml(c.name)}</span>
-        <span class="class-domains">
-          ${c.domains.map(id => {
-            const d = domains[byId[id]];
-            return d ? `<a class="tag" href="domains.html#${id}" style="--domain:${domainColor(id, byId[id])}">${escapeHtml(d.name)}</a>` : '';
-          }).join('')}
-        </span>
-        ${c.line ? `<span class="class-line">${escapeHtml(c.line)}</span>` : ''}
+        <a class="class-name" href="classes.html#${c.id}">${escapeHtml(c.name)}</a>
+        <span class="class-domains">${domainTags(c.domains, domains)}</span>
+        ${c.fantasy ? `<span class="class-line">${escapeHtml(c.fantasy)}</span>` : ''}
         <ul class="class-features">
-          <li><span>Main</span> ${escapeHtml(c.main)}</li>
-          <li><span>Flair</span> ${escapeHtml(c.flair)}</li>
-          <li><span>Hope</span> ${escapeHtml(c.hope)}</li>
+          ${FEATURE_KINDS.map(([kind, , short]) => `
+            <li><span>${short}</span> ${escapeHtml(c.features[kind].name || '(unnamed)')}</li>`).join('')}
         </ul>
       </div>`).join('');
 
@@ -282,7 +317,7 @@ function renderRing(domains, classes) {
       return `<a class="ring-cell ring-domain" href="#${d.id}"
                  style="${style};--domain:${domainColor(d.id, d.i)}">${escapeHtml(d.name)}</a>`;
     }
-    return `<div class="ring-cell ring-class" style="${style}">${escapeHtml(item.cls.name)}</div>`;
+    return `<a class="ring-cell ring-class" href="classes.html#${item.cls.id}" style="${style}">${escapeHtml(item.cls.name)}</a>`;
   });
   cells.push(`<div class="ring-cell ring-center" style="grid-row:2;grid-column:2" aria-hidden="true">♥</div>`);
   return `<div class="ring">${cells.join('')}</div>`;
@@ -344,7 +379,7 @@ function renderDomainSection({ domain, groups, color }, classes) {
         <h2>${escapeHtml(domain.name)}</h2>
         <p class="lede">${escapeHtml(domain.covers)}</p>
         ${users.length ? `<div class="domain-classes"><span class="eyebrow">Classes</span>
-          ${users.map(c => `<span class="tag">${escapeHtml(c.name)}</span>`).join('')}</div>` : ''}
+          ${users.map(c => `<a class="tag" href="classes.html#${c.id}">${escapeHtml(c.name)}</a>`).join('')}</div>` : ''}
       </header>
       ${body || '<p class="status">No cards yet.</p>'}
     </section>`;
@@ -401,10 +436,90 @@ async function initDomains() {
       <section class="domains-intro">
         <p class="eyebrow">HeartCore</p>
         <h1>Domains</h1>
-        <p class="lede">Every class takes two neighbouring domains on the ring. Domain cards go from level 1 to 4.</p>
+        <p class="lede">Every class takes two domains. Domain cards go from level 1 to 4.</p>
         ${renderRing(domains, classes)}
       </section>
       ${entries.map(e => renderDomainSection(e, classes)).join('')}
+    `;
+
+    watchSections(sidebar);
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  } catch (err) {
+    showError(root, err);
+  }
+}
+
+// ---------- Classes page ----------
+
+const featureId = (cls, kind) => `${cls.id}-${kind}`;
+
+function renderFeature(cls, [kind, label]) {
+  const f = cls.features[kind];
+  const stats = [label, f.cost != null ? `${f.cost} Hope` : null].filter(Boolean);
+  const options = f.options.map(o => typeof o === 'string' ? { text: o } : o);
+  return `
+    <article class="game-card" id="${featureId(cls, kind)}">
+      <header><h4>${escapeHtml(f.name || 'Unnamed')}</h4></header>
+      <div class="card-stats">${stats.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
+      <ul class="features">${f.text.map(t => `<li>${highlightRules(escapeHtml(t))}</li>`).join('')}</ul>
+      ${options.length ? `<ul class="options">${options.map(o => `
+        <li>${o.name ? `<strong>${escapeHtml(o.name)}</strong> ` : ''}${highlightRules(escapeHtml(o.text || ''))}</li>`).join('')}
+      </ul>` : ''}
+    </article>`;
+}
+
+function renderClassSection(cls, domains) {
+  const colors = cls.domains.map(id => domainColor(id, domains.findIndex(d => d.id === id)));
+  const names = cls.domains.map(id => domains.find(d => d.id === id)?.name || id);
+  return `
+    <section class="domain-section class-section" id="${cls.id}"
+             style="--c1:${colors[0] || 'var(--accent)'};--c2:${colors[1] || colors[0] || 'var(--accent)'}">
+      <header class="domain-head">
+        <p class="eyebrow">Class · ${escapeHtml(names.join(' + '))}</p>
+        <h2>${escapeHtml(cls.name)}</h2>
+        ${cls.fantasy ? `<p class="lede"><em>${escapeHtml(cls.fantasy)}</em></p>` : ''}
+        <div class="domain-classes"><span class="eyebrow">Domains</span>${domainTags(cls.domains, domains)}</div>
+        ${cls.examples.length ? `<p class="class-examples"><span class="eyebrow">Examples</span> ${escapeHtml(cls.examples.join(', '))}</p>` : ''}
+      </header>
+      <div class="cards class-cards">${FEATURE_KINDS.map(k => renderFeature(cls, k)).join('')}</div>
+      ${cls.loop || cls.open.length ? `
+        <div class="class-notes">
+          ${cls.loop ? `<p><span class="eyebrow">Loop</span> ${escapeHtml(cls.loop)}</p>` : ''}
+          ${cls.open.length ? `<p class="eyebrow">Open</p>
+            <ul>${cls.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>` : ''}
+        </div>` : ''}
+    </section>`;
+}
+
+function renderClassSidebar(classes) {
+  return `
+    <p class="eyebrow">Contents</p>
+    <ol class="toc">
+      ${classes.map(cls => `
+        <li>
+          <a class="toc-domain" href="#${cls.id}" data-section="${cls.id}">${escapeHtml(cls.name)}</a>
+          <ol>${FEATURE_KINDS.map(([kind, label]) => `
+            <li><a class="toc-card" href="#${featureId(cls, kind)}">${escapeHtml(cls.features[kind].name || label)}</a></li>`).join('')}
+          </ol>
+        </li>`).join('')}
+    </ol>`;
+}
+
+async function initClasses() {
+  const root = document.getElementById('content');
+  const sidebar = document.getElementById('sidebar');
+  renderNav('classes');
+  try {
+    const [domains, classes] = await Promise.all([loadDomains(), loadClasses()]);
+
+    sidebar.innerHTML = renderClassSidebar(classes);
+    root.innerHTML = `
+      <section class="domains-intro">
+        <p class="eyebrow">HeartCore</p>
+        <h1>Classes</h1>
+        <p class="lede">Each class has two domains, a main mechanic, a Flair and a Hope feature. Classes are archetypes, not professions.</p>
+      </section>
+      ${classes.map(c => renderClassSection(c, domains)).join('')}
     `;
 
     watchSections(sidebar);

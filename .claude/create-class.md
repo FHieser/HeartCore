@@ -9,7 +9,7 @@ Help the user design a class for **HeartCore**, a modern horror / SCP-style vari
 
 ## Before starting
 
-1. Look for the project's design document: `Baseline.md` in the repo root (or `README.md` if that's where the rules live). Read it to learn the current rules: rest economy, domains, the domain ring, existing classes and open topics. Treat that document as the source of truth over anything in this skill.
+1. Look for the project's design document: `Baseline.md` in the repo root (or `README.md` if that's where the rules live). Read it to learn the current rules: rest economy, domains, the domain ring and open topics. The existing classes live in `data/classes/*.yaml`; read them too. Treat that document as the source of truth over anything in this skill.
 2. If no design document is available, use the **Reference** section at the end of this skill and tell the user in one line that you're working from it.
 3. Ask which class the user wants to create or rework, unless they already said.
 
@@ -45,7 +45,7 @@ Checks:
 
 Choose the two domains.
 
-- Classes take two **neighboring** domains on the domain ring.
+- Classes take two domains. They don't have to be neighbours on the domain ring.
 - Every domain should belong to exactly two classes.
 - If the new class breaks the ring (e.g. a fifth class with four domains), say so plainly and offer ways to handle it: a new domain, a reshaped ring, or accepting overlap. Don't hide the problem.
 
@@ -112,25 +112,41 @@ Once the mechanics are locked, offer names for the class (if needed) and for eac
 
 Only after the user confirms everything:
 
-1. Write the class using the template below.
-2. Offer to add it to the design document: the class section, the class overview table and the loop table in the workflow section, plus any new **(open)** points under Open Topics.
-3. Edit the design document only if the user agrees.
+1. Show the class in the YAML format below.
+2. Offer to save it as `data/classes/<id>.yaml` (the webapp picks it up automatically) and to add its loop to the loop table in the design document's workflow section, plus any new **(open)** points under Open Topics.
+3. Write files only if the user agrees.
 
-## Class template
+## Class format
 
-```markdown
-### [Class Name] ([Domain] + [Domain])
+The format for `data/classes/<id>.yaml`. Every `text` entry is one physical line in double quotes (same rule as card text); `name` can be omitted while a feature is unnamed; Hope `cost` defaults to 3.
 
-*[Fantasy line.]*
-Examples: [professional examples], [civilian examples].
+```yaml
+name: [Class Name]
+domains: [domain, domain]       # body | mind | tech | aid
+fantasy: "[Fantasy line.]"
+examples: [example, example, example]
 
-- **Main, [Name]:** [Rules text.]
-- **Flair, [Name]:** [Rules text.]
-- **Hope feature, [Name] ([cost] Hope):** [Rules text.]
+features:
+  main:
+    name: [Name]                # omit while still unnamed
+    text:
+      - "[Rules text, one line per paragraph.]"
+    options:                    # optional: named choices or a list of questions
+      - name: [Option]
+        text: "[What it does.]"
+  flair:
+    name: [Name]
+    text:
+      - "[Rules text.]"
+  hope:
+    name: [Name]
+    cost: 3                     # Hope
+    text:
+      - "[Rules text.]"
 
-Notes:
-- [Loop / tension between features.]
-- [Open questions, marked (open).]
+loop: "[Loop / tension between features.]"
+open:
+  - "[Open question.]"
 ```
 
 ## Guardrails
@@ -164,7 +180,7 @@ Notes:
 
 **Class structure:** two domains, a main mechanic, a Flair, a Hope feature. No subclasses for now.
 
-**Existing classes:**
+**Existing classes** (full text in `data/classes/`):
 
 | Class | Domains | Main | Flair | Hope feature |
 |---|---|---|---|---|

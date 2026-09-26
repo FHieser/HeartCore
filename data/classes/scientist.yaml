@@ -1,0 +1,45 @@
+# Scientist class. Format: see .claude/create-class.md → Class format.
+
+name: Scientist
+domains: [mind, tech]
+fantasy: "The analyst. Understands what's happening, and pays for it."
+examples: [researcher, lab tech, grad student, journalist, hacker]
+
+features:
+  main:
+    name: Hypothesis
+    text:
+      - "Spend 1 Hope to declare a reasonable hypothesis about an anomaly (e.g. \"It's drawn to heat\"). If the group's test confirms it, choose one bonus for the party. A wrong hypothesis only costs the Hope."
+      - "Bonuses last until the anomaly is dealt with. They stack across different confirmed hypotheses (hypotheses must be reasonable, at GM discretion)."
+    options:
+      - name: Steeled
+        text: "When the anomaly causes Stress, each party member marks 1 less."
+      - name: Weak Spot
+        text: "Attacks against the anomaly deal +1 HP damage."
+      - name: Predictable
+        text: "The party gains +1 Evasion against the anomaly's attacks."
+      - name: Countermeasure
+        text: "Once per scene, one party member can ignore one of the anomaly's features."
+      - name: Early Warning
+        text: "The anomaly can't surprise the party. The GM must show a sign before it acts."
+      - name: Leverage
+        text: "Advantage on rolls to trap, evade or contain the anomaly."
+  flair:
+    name: Cold Logic
+    text:
+      - "Each time you receive Stress from an anomaly, ask the GM one question from the list. They answer truthfully."
+    options:
+      - text: "What is it reacting to right now?"
+      - text: "What is it about to do?"
+      - text: "Where is it, or where is it coming from?"
+      - text: "What here is dangerous that I haven't noticed?"
+      - text: "Is it hurt, and how badly?"
+      - text: "What would make this worse?"
+  hope:
+    name: It Starts With a Plan
+    cost: 3
+    text:
+      - "Distribute 3 Hope among the other players."
+
+loop: "Hope pays for Hypotheses; Cold Logic turns incoming Stress into information for better hypotheses."
+open: []

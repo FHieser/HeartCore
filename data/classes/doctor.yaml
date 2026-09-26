@@ -1,0 +1,27 @@
+# Doctor class. Format: see .claude/create-class.md → Class format.
+
+name: Doctor
+domains: [mind, aid]
+fantasy: "The one making the hard calls. Keeps people alive, but can't save everyone."
+examples: [paramedic, nurse, surgeon, psychologist, first aider]
+
+features:
+  main:
+    name: Code Red
+    text:
+      - "At the start of a dangerous scene, name one ally as your priority. When you Help an Ally for them, add a d8 instead of a d6."
+      - "You can switch your priority mid-scene. When you do, gain 1 Hope, and the previous priority marks 1 Stress (they know you've given up on them)."
+  flair:
+    name: House Call
+    text:
+      - "During a rest, choose one ally as your patient. They clear 1 additional HP or 1 additional Stress, and can choose from improved rest options."
+  hope:
+    name: Unparalleled Concentration
+    cost: 3
+    text:
+      - "Gain advantage on Finesse, Instinct and Knowledge rolls until the end of the scene."
+
+loop: "Switching priority in Code Red costs an ally Stress but gives Hope, which fuels Unparalleled Concentration."
+open:
+  - "Unparalleled Concentration shares Instinct with the Soldier's Adrenaline. Possible swap to Presence if they should be fully distinct."
+  - "\"Improved rest options\" still need to be defined."
