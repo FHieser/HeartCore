@@ -34,7 +34,7 @@ jobs:
           # Game content, fetched at runtime by the webapp via ../
           cp Baseline.md _site/
           [ -f Mechanics.md ] && cp Mechanics.md _site/ || true
-          cp -r cards _site/cards
+          cp -r data _site/data
 
       - uses: actions/configure-pages@v5
         with:

@@ -1,5 +1,5 @@
 // HeartCore site: data loading + rendering.
-// All game data is fetched at runtime from Baseline.md and cards/*.yaml,
+// All game data is fetched at runtime from Baseline.md and data/**/*.yaml,
 // so editing those files is enough to update the site.
 // The loaders (load*) are kept independent of the DOM so a future
 // character builder can reuse them.
@@ -144,11 +144,13 @@ async function loadClasses() {
   }));
 }
 
-// Cards of one domain (or "found"). Missing file → empty list.
+// Cards of one domain (data/domains/<id>.yaml) or the found cards
+// (data/found/found.yaml). Missing file → empty list.
 async function loadCards(id) {
+  const file = id === FOUND.id ? 'data/found/found.yaml' : `data/domains/${id}.yaml`;
   let text;
   try {
-    text = await fetchText(`${DATA_ROOT}cards/${id}.yaml`);
+    text = await fetchText(DATA_ROOT + file);
   } catch {
     return [];
   }

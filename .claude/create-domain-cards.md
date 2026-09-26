@@ -10,7 +10,7 @@ Help the user design domain cards for **HeartCore**, a modern horror / SCP-style
 ## Before starting
 
 1. Read `Baseline.md` in the repo root. It is the source of truth for the rest economy, domains, classes, the **Cards** section (card economy, card format) and open topics.
-2. Read the domain's file in `cards/` (`body.yaml`, `mind.yaml`, `tech.yaml`, `aid.yaml`) to see which cards and directions already exist.
+2. Read the domain's file in `data/domains/` (`body.yaml`, `mind.yaml`, `tech.yaml`, `aid.yaml`) to see which cards and directions already exist.
 3. Ask which domain and level the user wants to work on, unless they already said. Default order: level 1 for all four domains first, then levels 2–4.
 
 ## How to work
@@ -22,7 +22,7 @@ Help the user design domain cards for **HeartCore**, a modern horror / SCP-style
 - **Build on the user's ideas.** Restate them cleanly, point out ambiguities or balance risks, and only offer alternatives if asked.
 - **Ask when unclear.** If something can be read two ways, lay out both readings and ask.
 - **Names last.** Once the mechanics are locked, offer ~5 names per card.
-- **No file edits without confirmation.** Only write cards into `cards/*.yaml` once the user has confirmed the mechanics and the name.
+- **No file edits without confirmation.** Only write cards into `data/domains/*.yaml` once the user has confirmed the mechanics and the name.
 
 ## The workflow
 
