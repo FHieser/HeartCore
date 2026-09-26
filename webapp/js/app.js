@@ -162,13 +162,12 @@ function domainColor(id, index = 0) {
 
 // ---------- Shared chrome ----------
 
-function renderNav(domains, currentId) {
+function renderNav(current) {
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
-  nav.innerHTML = [...domains, FOUND].map((d, i) =>
-    `<a href="domain.html?d=${d.id}" style="--domain:${domainColor(d.id, i)}"
-        class="${d.id === currentId ? 'current' : ''}">${escapeHtml(d.name)}</a>`
-  ).join('');
+  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains']]
+    .map(([id, href, label]) => `<a href="${href}" class="${id === current ? 'current' : ''}">${label}</a>`)
+    .join('');
 }
 
 function showError(el, err) {
@@ -179,7 +178,71 @@ function showError(el, err) {
   console.error(err);
 }
 
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
 // ---------- Overview page ----------
+
+async function initOverview() {
+  const root = document.getElementById('content');
+  renderNav('overview');
+  try {
+    const [sections, domains, classes] = await Promise.all([loadBaseline(), loadDomains(), loadClasses()]);
+    const all = [...domains, FOUND];
+    const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
+    const total = cardLists.reduce((n, l) => n + l.length, 0);
+    const byId = Object.fromEntries(domains.map((d, i) => [d.id, i]));
+
+    const intro = sections._intro
+      .split('\n')
+      .filter(l => l.trim() && !/^(#|>|\*A )/.test(l.trim()))
+      .join('\n');
+
+    const classCards = classes.map(c => `
+      <div class="class-card">
+        <span class="class-name">${escapeHtml(c.name)}</span>
+        <span class="class-domains">
+          ${c.domains.map(id => {
+            const d = domains[byId[id]];
+            return d ? `<a class="tag" href="domains.html#${id}" style="--domain:${domainColor(id, byId[id])}">${escapeHtml(d.name)}</a>` : '';
+          }).join('')}
+        </span>
+        ${c.line ? `<span class="class-line">${escapeHtml(c.line)}</span>` : ''}
+        <ul class="class-features">
+          <li><span>Main</span> ${escapeHtml(c.main)}</li>
+          <li><span>Flair</span> ${escapeHtml(c.flair)}</li>
+          <li><span>Hope</span> ${escapeHtml(c.hope)}</li>
+        </ul>
+      </div>`).join('');
+
+    root.innerHTML = `
+      <section>
+        <p class="eyebrow">A Daggerheart horror variant</p>
+        <h1>HeartCore</h1>
+        <div class="lede prose">${renderProse(intro)}</div>
+      </section>
+
+      ${sections['Design Pillars'] ? `
+        <h2>Design Pillars</h2>
+        <div class="prose">${renderProse(sections['Design Pillars'])}</div>` : ''}
+
+      <h2>Domains</h2>
+      <a class="link-field" href="domains.html">
+        <span class="link-field-title">All domains &amp; cards →</span>
+        <span class="link-field-domains">
+          ${all.map((d, i) => `<span style="--domain:${domainColor(d.id, i)}">${escapeHtml(d.name)}</span>`).join('')}
+        </span>
+        <span class="eyebrow">${plural(total, 'card')}</span>
+      </a>
+
+      <h2>Classes</h2>
+      <div class="grid">${classCards}</div>
+    `;
+  } catch (err) {
+    showError(root, err);
+  }
+}
+
+// ---------- Domains page ----------
 
 // Walk the domain/class ring so it can be laid out around a 3×3 grid.
 // Returns [domain, class, domain, class, …] or null if it isn't a simple ring of 8.
@@ -214,7 +277,7 @@ function renderRing(domains, classes) {
     const style = `grid-row:${row};grid-column:${col}`;
     if (item.kind === 'domain') {
       const d = byId[item.id];
-      return `<a class="ring-cell ring-domain" href="domain.html?d=${d.id}"
+      return `<a class="ring-cell ring-domain" href="#${d.id}"
                  style="${style};--domain:${domainColor(d.id, d.i)}">${escapeHtml(d.name)}</a>`;
     }
     return `<div class="ring-cell ring-class" style="${style}">${escapeHtml(item.cls.name)}</div>`;
@@ -222,79 +285,6 @@ function renderRing(domains, classes) {
   cells.push(`<div class="ring-cell ring-center" style="grid-row:2;grid-column:2" aria-hidden="true">♥</div>`);
   return `<div class="ring">${cells.join('')}</div>`;
 }
-
-async function initOverview() {
-  const root = document.getElementById('content');
-  try {
-    const [sections, domains, classes] = await Promise.all([loadBaseline(), loadDomains(), loadClasses()]);
-    renderNav(domains);
-
-    const all = [...domains, FOUND];
-    const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
-    const byId = Object.fromEntries(domains.map((d, i) => [d.id, i]));
-
-    const intro = sections._intro
-      .split('\n')
-      .filter(l => l.trim() && !/^(#|>|\*A )/.test(l.trim()))
-      .join('\n');
-
-    const tiles = all.map((d, i) => {
-      const cards = cardLists[i];
-      const users = classes.filter(c => c.domains.includes(d.id)).map(c => c.name);
-      const levels = [...new Set(cards.map(c => c.source?.level).filter(Boolean))].sort();
-      return `
-        <a class="tile" href="domain.html?d=${d.id}" style="--domain:${domainColor(d.id, i)}">
-          <span class="tile-title">${escapeHtml(d.name)}</span>
-          <span class="tile-text">${escapeHtml(d.covers)}</span>
-          <span class="tile-meta">
-            <span class="tag">${cards.length} card${cards.length === 1 ? '' : 's'}</span>
-            ${levels.length ? `<span class="tag">Lv ${levels.join(', ')}</span>` : ''}
-            ${users.map(u => `<span class="tag">${escapeHtml(u)}</span>`).join('')}
-          </span>
-        </a>`;
-    }).join('');
-
-    const classCards = classes.map(c => `
-      <div class="class-card">
-        <span class="class-name">${escapeHtml(c.name)}</span>
-        <span class="class-domains">
-          ${c.domains.map(id => {
-            const d = domains[byId[id]];
-            return d ? `<a class="tag" href="domain.html?d=${id}" style="--domain:${domainColor(id, byId[id])}">${escapeHtml(d.name)}</a>` : '';
-          }).join('')}
-        </span>
-        ${c.line ? `<span class="class-line">${escapeHtml(c.line)}</span>` : ''}
-        <ul class="class-features">
-          <li><span>Main</span> ${escapeHtml(c.main)}</li>
-          <li><span>Flair</span> ${escapeHtml(c.flair)}</li>
-          <li><span>Hope</span> ${escapeHtml(c.hope)}</li>
-        </ul>
-      </div>`).join('');
-
-    root.innerHTML = `
-      <section>
-        <p class="eyebrow">A Daggerheart horror variant</p>
-        <h1>HeartCore</h1>
-        <div class="lede prose">${renderProse(intro)}</div>
-      </section>
-
-      ${sections['Design Pillars'] ? `
-        <h2>Design Pillars</h2>
-        <div class="prose">${renderProse(sections['Design Pillars'])}</div>` : ''}
-
-      <h2>Domains &amp; Classes</h2>
-      ${renderRing(domains, classes)}
-      <div class="grid" style="margin-top:1.5rem">${tiles}</div>
-
-      <h2>Classes</h2>
-      <div class="grid">${classCards}</div>
-    `;
-  } catch (err) {
-    showError(root, err);
-  }
-}
-
-// ---------- Domain page ----------
 
 // Highlight costs and frequencies in card text. Input must be escaped.
 function highlightRules(s) {
@@ -304,19 +294,22 @@ function highlightRules(s) {
   );
 }
 
-function renderCard(card) {
+const cardId = (domainId, card) => `${domainId}-${slug(card.name || 'unnamed')}`;
+const groupId = (domainId, label) => `${domainId}-${slug(label)}`;
+
+function renderCard(card, domainId) {
   const src = card.source || {};
   const slots = card.slots ?? 1;
   const stats = [
     card.type,
     src.kind === 'domain' && src.level != null ? `Level ${src.level}` : null,
-    `${slots} slot${slots === 1 ? '' : 's'}`,
+    plural(slots, 'slot'),
     card.recall != null ? `Recall ${card.recall}` : null,
   ].filter(v => v != null);
   const text = Array.isArray(card.text) ? card.text : card.text ? [card.text] : [];
   return `
-    <article class="game-card" id="${slug(card.name || '')}">
-      <header><h3>${escapeHtml(card.name || 'Unnamed')}</h3></header>
+    <article class="game-card" id="${cardId(domainId, card)}">
+      <header><h4>${escapeHtml(card.name || 'Unnamed')}</h4></header>
       <div class="card-stats">${stats.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
       <ul class="features">${text.map(t => `<li>${highlightRules(escapeHtml(t))}</li>`).join('')}</ul>
       ${card.flavor ? `<p class="flavor">“${escapeHtml(card.flavor)}”</p>` : ''}
@@ -336,41 +329,84 @@ function groupCards(cards) {
   return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
 }
 
-async function initDomain() {
-  const root = document.getElementById('content');
-  const id = new URLSearchParams(location.search).get('d');
-  try {
-    const [domains, classes] = await Promise.all([loadDomains(), loadClasses()]);
-    renderNav(domains, id);
-
-    const index = domains.findIndex(d => d.id === id);
-    const domain = id === FOUND.id ? FOUND : domains[index];
-    if (!domain) {
-      root.innerHTML = `<p class="status error">Unknown domain "${escapeHtml(id ?? '')}". <a href="index.html">Back to overview</a></p>`;
-      return;
-    }
-    document.body.style.setProperty('--domain', domainColor(domain.id, index));
-    document.title = `${domain.name} · HeartCore`;
-
-    const cards = await loadCards(domain.id);
-    const users = classes.filter(c => c.domains.includes(domain.id));
-
-    const groups = groupCards(cards).map(([label, list]) => `
-      <h2 class="level-head">${escapeHtml(label)}<span class="eyebrow">${list.length} card${list.length === 1 ? '' : 's'}</span></h2>
-      <div class="cards">${list.map(renderCard).join('')}</div>`).join('');
-
-    root.innerHTML = `
-      <section class="domain-hero">
-        <p class="eyebrow">${domain.id === FOUND.id ? 'Found cards' : 'Domain'}</p>
-        <h1>${escapeHtml(domain.name)}</h1>
+function renderDomainSection({ domain, groups, color }, classes) {
+  const users = classes.filter(c => c.domains.includes(domain.id));
+  const count = groups.reduce((n, [, list]) => n + list.length, 0);
+  const body = groups.map(([label, list]) => `
+    <h3 class="level-head" id="${groupId(domain.id, label)}">${escapeHtml(label)}<span class="eyebrow">${plural(list.length, 'card')}</span></h3>
+    <div class="cards">${list.map(c => renderCard(c, domain.id)).join('')}</div>`).join('');
+  return `
+    <section class="domain-section" id="${domain.id}" style="--domain:${color}">
+      <header class="domain-head">
+        <p class="eyebrow">${domain.id === FOUND.id ? 'Found cards' : 'Domain'} · ${plural(count, 'card')}</p>
+        <h2>${escapeHtml(domain.name)}</h2>
         <p class="lede">${escapeHtml(domain.covers)}</p>
         ${users.length ? `<div class="domain-classes"><span class="eyebrow">Classes</span>
           ${users.map(c => `<span class="tag">${escapeHtml(c.name)}</span>`).join('')}</div>` : ''}
+      </header>
+      ${body || '<p class="status">No cards yet.</p>'}
+    </section>`;
+}
+
+function renderSidebar(entries) {
+  return `
+    <p class="eyebrow">Contents</p>
+    <ol class="toc">
+      ${entries.map(({ domain, groups, color }) => `
+        <li style="--domain:${color}">
+          <a class="toc-domain" href="#${domain.id}" data-section="${domain.id}">${escapeHtml(domain.name)}</a>
+          ${groups.length ? `<ol>
+            ${groups.map(([label, list]) => `
+              <li>
+                <a class="toc-group" href="#${groupId(domain.id, label)}">${escapeHtml(label)}</a>
+                <ol>${list.map(c => `<li><a class="toc-card" href="#${cardId(domain.id, c)}">${escapeHtml(c.name || 'Unnamed')}</a></li>`).join('')}</ol>
+              </li>`).join('')}
+          </ol>` : ''}
+        </li>`).join('')}
+    </ol>`;
+}
+
+// Highlight the sidebar entry of the domain currently on screen.
+function watchSections(sidebar) {
+  const links = Object.fromEntries(
+    [...sidebar.querySelectorAll('[data-section]')].map(a => [a.dataset.section, a])
+  );
+  const visible = new Set();
+  const observer = new IntersectionObserver(entries => {
+    for (const e of entries) e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id);
+    const active = Object.keys(links).find(id => visible.has(id));
+    for (const [id, a] of Object.entries(links)) a.classList.toggle('active', id === active);
+  }, { rootMargin: '-10% 0px -60% 0px' });
+  document.querySelectorAll('.domain-section').forEach(s => observer.observe(s));
+}
+
+async function initDomains() {
+  const root = document.getElementById('content');
+  const sidebar = document.getElementById('sidebar');
+  renderNav('domains');
+  try {
+    const [domains, classes] = await Promise.all([loadDomains(), loadClasses()]);
+    const all = [...domains, FOUND];
+    const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
+    const entries = all.map((domain, i) => ({
+      domain,
+      groups: groupCards(cardLists[i]),
+      color: domainColor(domain.id, i),
+    }));
+
+    sidebar.innerHTML = renderSidebar(entries);
+    root.innerHTML = `
+      <section class="domains-intro">
+        <p class="eyebrow">HeartCore</p>
+        <h1>Domains</h1>
+        <p class="lede">Every class takes two neighbouring domains on the ring. Domain cards go from level 1 to 4.</p>
+        ${renderRing(domains, classes)}
       </section>
-      ${groups || '<p class="status">No cards yet.</p>'}
+      ${entries.map(e => renderDomainSection(e, classes)).join('')}
     `;
 
-    if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
+    watchSections(sidebar);
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
   } catch (err) {
     showError(root, err);
   }

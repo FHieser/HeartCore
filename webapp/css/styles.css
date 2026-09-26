@@ -204,13 +204,109 @@ a.tile:hover { border-color: var(--domain); }
   min-width: 3.2rem;
 }
 
-/* ---------- Domain page ---------- */
+/* ---------- Overview: domains link field ---------- */
 
-.domain-hero h1 { color: var(--domain); }
+.link-field {
+  display: flex;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+  background: var(--panel);
+  border: 1px solid var(--accent-dim);
+  padding: 1.3rem 1.5rem;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.link-field:hover { border-color: var(--accent); background: #100505; }
+.link-field-title { color: var(--accent); font-size: 1.2rem; letter-spacing: 0.03em; }
+.link-field-domains { display: flex; gap: 0.5rem; flex-wrap: wrap; flex: 1; }
+.link-field-domains span {
+  color: var(--domain);
+  border: 1px solid var(--domain);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.15rem 0.5rem;
+}
+
+/* ---------- Domains page: layout + sidebar ---------- */
+
+.layout {
+  flex: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 2rem;
+  padding: 0 1rem;
+}
+.layout main { max-width: none; margin: 0; padding: 2.5rem 0 4rem; }
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 2.5rem 0.5rem 2rem 0;
+  border-right: 1px solid #141414;
+}
+.toc, .toc ol { list-style: none; }
+.toc { margin-top: 0.8rem; display: grid; gap: 0.9rem; }
+.toc a { display: block; text-decoration: none; color: var(--muted); }
+.toc a:hover { color: var(--text); }
+.toc-domain {
+  color: var(--domain) !important;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  border-left: 2px solid transparent;
+  padding-left: 0.6rem;
+  margin-left: -0.6rem;
+}
+.toc-domain.active { border-left-color: var(--domain); }
+.toc ol ol { margin: 0.1rem 0 0.4rem 0.8rem; border-left: 1px solid #1c1c1c; }
+.toc-group {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 0.35rem;
+}
+.toc-card { font-size: 0.82rem; padding: 0.1rem 0 0.1rem 0.6rem; }
+
+/* ---------- Domains page: sections ---------- */
+
+.domains-intro .ring { margin-top: 1.5rem; }
+
+.domain-section { scroll-margin-top: 1rem; margin-top: 4rem; }
+.domain-head { border-top: 3px solid var(--domain); padding-top: 1.2rem; }
+.domain-head h2 {
+  color: var(--domain);
+  font-size: 2rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  border: 0;
+}
 .domain-classes { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; align-items: center; }
 
-.level-head { display: flex; align-items: baseline; gap: 0.8rem; }
+.level-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  font-size: 1.05rem;
+  font-weight: normal;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin: 2rem 0 0.9rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 1rem;
+}
 .level-head .eyebrow { margin-left: auto; }
+.game-card { scroll-margin-top: 1rem; }
+.game-card:target { border-color: var(--domain); }
 
 .cards {
   display: grid;
@@ -227,12 +323,26 @@ a.tile:hover { border-color: var(--domain); }
   gap: 0.7rem;
 }
 .game-card header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.6rem; }
-.game-card h3 { color: var(--domain); font-size: 1.15rem; font-weight: normal; letter-spacing: 0.02em; }
+.game-card h4 { color: var(--domain); font-size: 1.15rem; font-weight: normal; letter-spacing: 0.02em; }
 .card-stats { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .features { list-style: none; display: grid; gap: 0.6rem; font-size: 0.9rem; }
 .features li + li { border-top: 1px solid var(--line); padding-top: 0.6rem; }
 .kw { color: #e6e6e6; font-weight: bold; }
 .flavor { color: var(--faint); font-style: italic; font-size: 0.82rem; margin-top: auto; }
+
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; gap: 0; }
+  .sidebar {
+    position: static;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid #141414;
+    padding: 1.5rem 0 1rem;
+  }
+  .toc { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .toc > li > ol { display: none; }
+  .layout main { padding-top: 1.5rem; }
+}
 
 @media (max-width: 520px) {
   h1 { font-size: 1.7rem; }
