@@ -1,0 +1,4 @@
+# Found cards (items, artifacts, abilities, curses, …). Level-independent.
+# Format: see Baseline.md → Cards → Card format. Use source: { kind: found }.
+
+[]
