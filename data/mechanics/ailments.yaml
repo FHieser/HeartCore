@@ -1,0 +1,166 @@
+# Ailments: all rules and both tables. Shown on webapp/ailments.html.
+# Roll a d12 on the table for the ailment type; the result is the ailment.
+# lasts: instant | scene | short_rest | long_rest | treated | permanent | special
+# All text entries are one line each, no line breaks (same rule as cards).
+
+name: Ailments
+summary: "Lasting mental and physical harm. Ailments are what makes wounds and fear carry over."
+
+rules:
+  - "Roll a d12 on the table for the ailment type. The result is the ailment; no one chooses."
+  - "If you already have that ailment, reroll."
+  - "Each ailment states how long it lasts. Many take effect immediately and are over once resolved."
+  - "The tables are a severity ladder: the higher the roll, the worse the ailment. Both end with losing the character: death on the physical table, madness on the Stress table."
+  - "Physical ailments are harsher than Stress ailments."
+  - "Base Daggerheart still applies: while your Stress is maxed, any Stress you would mark is marked as HP instead. This doesn't trigger another Stress ailment."
+
+treatment:
+  name: Treat ailment
+  text:
+    - "A special rest action that costs 3 rest actions and removes one \"until treated\" ailment."
+    - "Only available with proper care: as the Doctor's patient (House Call), or at a medbay or hospital. Without one of these, the ailment stays."
+    - "Treatment is meant to be expensive and punishing."
+
+notes:
+  - "Stress ailments trigger at maxed Stress, so any further Stress becomes HP. Avoid Stress costs in Stress ailments unless HP damage is intended."
+  - "Design rule: ailments need an immediate, noticeable effect and no bookkeeping, and must plausibly be fixed by what ends them (a breather, a night's sleep, treatment)."
+
+open:
+  - "Scars (practically permanent injuries, e.g. from Avoid Death) are dropped for now; may come back later."
+  - "What happens when you already have every rerollable ailment on a table."
+  - "Does a Stress ailment replace or add to being Vulnerable at max Stress?"
+  - "Stacking: can you have several ailments, and is there a limit?"
+  - "Relation to the vault: do ailments replace the injury and panic vault triggers (see Baseline.md → Cards)?"
+  - "Interaction with the Soldier's Adrenaline (benefits from maxed Stress)."
+  - "Whether any cards (Aid: First Aid, Calm) interact with ailments."
+
+physical:
+  name: Physical ailments
+  trigger: "You mark 3 HP from a single hit (Severe damage)."
+  table:
+    - roll: 1
+      name: Winded
+      lasts: scene
+      text:
+        - "Until the end of the scene, you don't get your normal movement when you have the spotlight."
+    - roll: 2
+      name: Stunned
+      lasts: instant
+      text:
+        - "You can't act or move the next time you have the spotlight."
+    - roll: 3
+      name: Disarmed
+      lasts: scene
+      text:
+        - "You drop what you're holding; one Item card goes to the vault until the end of the scene. If you aren't holding anything, mark 1 Stress instead."
+    - roll: 4
+      name: Ringing Ears
+      lasts: scene
+      text:
+        - "Put your fingers in your ears, for real, until the GM ends it or the scene ends."
+    - roll: 5
+      name: Dislocated Shoulder
+      lasts: special
+      text:
+        - "One arm is useless. You can still use it, but each action with that arm costs 1 Stress."
+        - "In a calm moment (no immediate threat, GM decides), mark 1 Stress to pop it back in."
+    - roll: 6
+      name: The Shivers
+      lasts: short_rest
+      text:
+        - "Your hands won't stop shaking. Until a short rest, you have disadvantage on Finesse rolls and can't clear Stress by any means."
+    - roll: 7
+      name: Concussion
+      lasts: long_rest
+      text:
+        - "Until a long rest, you have one loadout slot fewer (if that leaves you over the limit, pack a card into the vault) and disadvantage on Knowledge and Instinct rolls."
+    - roll: 8
+      name: Coughing Fit
+      lasts: long_rest
+      text:
+        - "Smoke, dust or gas in your lungs. Until a long rest, you can't stay quiet: whenever you try to sneak or hide, the GM chooses whether they gain 1 Fear or the attempt fails."
+    - roll: 9
+      name: Cracked Ribs
+      lasts: treated
+      text:
+        - "Until treated, your Stress maximum drops by 1. If that maxes out your Stress, you immediately get a Stress ailment."
+    - roll: 10
+      name: Shrapnel
+      lasts: treated
+      text:
+        - "Something is still stuck in you. Until treated, each time you mark HP, also mark 1 Stress."
+    - roll: 11
+      name: Deep Cut
+      lasts: treated
+      text:
+        - "The wound keeps tearing open. Until treated, each time you roll with Fear on a Strength or Agility roll, mark 1 HP."
+    - roll: 12
+      name: Dead
+      lasts: permanent
+      text:
+        - "Your character dies. The player loses the character."
+
+stress:
+  name: Stress ailments
+  trigger: "You mark your last Stress slot."
+  table:
+    - roll: 1
+      name: Run!
+      lasts: instant
+      text:
+        - "The next time you have the spotlight, you have to move away from the threat, as far as you can."
+    - roll: 2
+      name: Hopeless
+      lasts: instant
+      text:
+        - "Your Hope drops to 0."
+    - roll: 3
+      name: Scream
+      lasts: instant
+      text:
+        - "You scream. The GM gains 1 Fear, and anything nearby knows where you are."
+    - roll: 4
+      name: Cling
+      lasts: scene
+      text:
+        - "Until the end of the scene, you won't leave an ally's side. You have to stay within Very Close range of them."
+    - roll: 5
+      name: Numb
+      lasts: short_rest
+      text:
+        - "Until a short rest, you can't gain Hope by any means."
+    - roll: 6
+      name: Avoidance
+      lasts: short_rest
+      text:
+        - "Until a short rest, you can't willingly move toward the threat. Sideways or away is fine."
+    - roll: 7
+      name: Locked Up
+      lasts: long_rest
+      text:
+        - "Your head is blocked. Until a long rest, you can't recall cards from the vault, not even by paying the Recall Cost."
+    - roll: 8
+      name: Whispers
+      lasts: long_rest
+      text:
+        - "Until a long rest, the GM can secretly tell you what the voices want at any time (\"open that door,\" \"leave them behind,\" \"look behind you\"). If you obey, gain 1 Hope."
+    - roll: 9
+      name: Haunted
+      lasts: treated
+      text:
+        - "You can't settle down. Until treated, you get 1 rest action fewer during every rest."
+    - roll: 10
+      name: Paranoid
+      lasts: treated
+      text:
+        - "You don't trust anyone. Until treated, you can't give or receive Help an Ally."
+    - roll: 11
+      name: Doomed
+      lasts: treated
+      text:
+        - "Until treated, whenever you roll with Fear, the GM gains 2 Fear instead of 1."
+    - roll: 12
+      name: Madness
+      lasts: permanent
+      text:
+        - "Your character is lost to their mind. The player loses the character."

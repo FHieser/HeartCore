@@ -14,7 +14,7 @@ features:
   flair:
     name: House Call
     text:
-      - "During a rest, choose one ally as your patient. They clear 1 additional HP or 1 additional Stress, and can choose from improved rest options."
+      - "During a rest, choose one ally as your patient. They clear 1 additional HP or 1 additional Stress, and can use the Treat ailment rest action (see Mechanics.md → Ailments)."
   hope:
     name: Unparalleled Concentration
     cost: 3
@@ -24,4 +24,3 @@ features:
 loop: "Switching priority in Code Red costs an ally Stress but gives Hope, which fuels Unparalleled Concentration."
 open:
   - "Unparalleled Concentration shares Instinct with the Soldier's Adrenaline. Possible swap to Presence if they should be fully distinct."
-  - "\"Improved rest options\" still need to be defined."
