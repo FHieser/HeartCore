@@ -13,6 +13,7 @@ rules:
   - "The tables are a severity ladder: the higher the roll, the worse the ailment. Both end with losing the character: death on the physical table, madness on the Stress table."
   - "Physical ailments are harsher than Stress ailments."
   - "Base Daggerheart still applies: while your Stress is maxed, any Stress you would mark is marked as HP instead. This doesn't trigger another Stress ailment."
+  - "The Soldier's Adrenaline suppresses the Stress ailment until the end of the scene; then it's rolled as normal."
 
 treatment:
   name: Treat ailment
@@ -31,7 +32,6 @@ open:
   - "Does a Stress ailment replace or add to being Vulnerable at max Stress?"
   - "Stacking: can you have several ailments, and is there a limit?"
   - "Relation to the vault: do ailments replace the injury and panic vault triggers (see Baseline.md → Cards)?"
-  - "Interaction with the Soldier's Adrenaline (benefits from maxed Stress)."
   - "Whether any cards (Aid: First Aid, Calm) interact with ailments."
 
 physical:

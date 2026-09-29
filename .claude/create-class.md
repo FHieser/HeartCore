@@ -184,7 +184,7 @@ open:
 
 | Class | Domains | Main | Flair | Hope feature |
 |---|---|---|---|---|
-| Soldier | Body + Aid | Ward: mark your Armor Slots to protect a chosen ally | Adrenaline: at max Stress, advantage on Strength/Instinct/Agility; overrides max Stress penalties | Calm Under Pressure: clear 2 Stress |
+| Soldier | Body + Aid | Ward: mark your Armor Slots to protect a chosen ally | Adrenaline: at max Stress, advantage on Strength/Instinct/Agility; overrides max Stress penalties and suppresses the Stress ailment until the scene ends | Calm Under Pressure: clear 2 Stress |
 | Mechanic | Body + Tech | MacGyver: gain Scrap on rolls with Hope, refills on short rest, build things | Advantage understanding tech and infrastructure | Not Pretty, But It'll Do: instant free build that breaks after one use |
 | Scientist | Mind + Tech | Hypothesis: 1 Hope to declare; confirmed hypotheses give stacking party bonuses | Cold Logic: truthful GM answer from a question list when receiving Stress from an anomaly | It Starts With a Plan (3 Hope): give 3 Hope to other players |
 | Doctor | Mind + Aid | Code Red: priority ally gets d8 Help an Ally; switching gives Hope, costs the old priority a Stress | House Call: rest patient clears 1 extra HP or Stress and can Treat ailments | Unparalleled Concentration: advantage on Finesse/Instinct/Knowledge for the scene |
