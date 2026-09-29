@@ -13,6 +13,15 @@
     - "Spend 1 Hope to clear 1 HP on yourself or an ally within Melee. You have 3 uses per long rest. When you use the last one, the GM gains 1 Fear."
     - "Once per scene, when an ally within Close range marks 2 or more HP at once, gain 1 Hope."
 
+- name: Steady Now
+  type: ability
+  source: { kind: domain, domain: aid, level: 1 }
+  slots: 1
+  recall: 1
+  text:
+    - "When an ally within Close range rolls on the Stress ailment table, spend 1 Hope. They roll twice and take the lower result."
+    - "After a long rest, fill a pool equal to your level + 1. Spend 1 point to choose one: prevent 1 Stress you would mark, or mark 1 Stress so an ally within Close range clears 1 Stress."
+
 - name: Get Down!
   type: ability
   source: { kind: domain, domain: aid, level: 1 }
