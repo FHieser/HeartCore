@@ -233,6 +233,24 @@ function loadAilments() {
   return ailmentsPromise;
 }
 
+// Rest: rest types and rest actions (data/mechanics/rest.yaml).
+let restPromise;
+function loadRest() {
+  restPromise ??= fetchText(`${DATA_ROOT}data/mechanics/rest.yaml`).then(text => {
+    const r = jsyaml.load(text) || {};
+    return {
+      name: r.name || 'Rest',
+      summary: r.summary || '',
+      rests: asList(r.rests),
+      rules: asList(r.rules),
+      actions: asList(r.actions).map(a => ({ ...a, text: asList(a.text) })),
+      notes: asList(r.notes),
+      open: asList(r.open),
+    };
+  });
+  return restPromise;
+}
+
 function domainColor(id, index = 0) {
   return DOMAIN_COLORS[id] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 }
@@ -242,7 +260,7 @@ function domainColor(id, index = 0) {
 function renderNav(current) {
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
-  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['ailments', 'ailments.html', 'Ailments']]
+  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['rest', 'rest.html', 'Rest'], ['ailments', 'ailments.html', 'Ailments']]
     .map(([id, href, label]) => `<a href="${href}" class="${id === current ? 'current' : ''}">${label}</a>`)
     .join('');
 }
@@ -271,8 +289,8 @@ async function initOverview() {
   const root = document.getElementById('content');
   renderNav('overview');
   try {
-    const [sections, domains, classes, ailments] = await Promise.all([
-      loadBaseline(), loadDomains(), loadClasses(), loadAilments().catch(() => null),
+    const [sections, domains, classes, rest, ailments] = await Promise.all([
+      loadBaseline(), loadDomains(), loadClasses(), loadRest().catch(() => null), loadAilments().catch(() => null),
     ]);
     const all = [...domains, FOUND];
     const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
@@ -313,6 +331,14 @@ async function initOverview() {
       </a>
 
       <h2>Mechanics</h2>
+      ${rest ? `
+        <a class="link-field" href="rest.html">
+          <span class="link-field-title">Rest →</span>
+          <span class="link-field-domains">
+            ${rest.rests.map(r => `<span style="--domain:#9a9a9a">${escapeHtml(r.name)} · ${plural(r.actions, 'action')}</span>`).join('')}
+          </span>
+          <span class="eyebrow">${plural(rest.actions.length, 'rest action')}</span>
+        </a>` : ''}
       ${ailments ? `
         <a class="link-field" href="ailments.html">
           <span class="link-field-title">Ailments →</span>
@@ -320,7 +346,8 @@ async function initOverview() {
             ${ailments.tables.map(t => `<span style="--domain:${t.color}">${escapeHtml(t.name)}</span>`).join('')}
           </span>
           <span class="eyebrow">${plural(ailments.tables.reduce((n, t) => n + t.entries.length, 0), 'ailment')}</span>
-        </a>` : '<p class="status">No mechanics yet.</p>'}
+        </a>` : ''}
+      ${rest || ailments ? '' : '<p class="status">No mechanics yet.</p>'}
     `;
   } catch (err) {
     showError(root, err);
@@ -621,6 +648,52 @@ function renderAilmentSection(table) {
       </header>
       <div class="cards ailment-cards">${table.entries.map(e => renderAilment(table, e)).join('')}</div>
     </section>`;
+}
+
+// ---------- Rest page ----------
+
+function renderRestAction(action) {
+  const stats = [action.cost != null ? plural(action.cost, 'action') : null].filter(Boolean);
+  return `
+    <article class="game-card" id="rest-${slug(action.name || 'action')}">
+      <header><h4>${escapeHtml(action.name || 'Unnamed')}</h4></header>
+      <div class="card-stats">${stats.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
+      <ul class="features">${action.text.map(t => `<li>${highlightRules(escapeHtml(t))}</li>`).join('')}</ul>
+      ${action.requires ? `<p class="requires"><span class="eyebrow">Requires</span> ${escapeHtml(action.requires)}</p>` : ''}
+    </article>`;
+}
+
+async function initRest() {
+  const root = document.getElementById('content');
+  renderNav('rest');
+  try {
+    const r = await loadRest();
+    root.innerHTML = `
+      <section>
+        <p class="eyebrow">Mechanics</p>
+        <h1>${escapeHtml(r.name)}</h1>
+        ${r.summary ? `<p class="lede">${escapeHtml(r.summary)}</p>` : ''}
+        <div class="class-stats">${r.rests.map(x => `
+          <span class="stat"><span class="stat-value">${escapeHtml(x.actions)}</span><span class="eyebrow">${escapeHtml(x.name)} · actions</span></span>`).join('')}
+        </div>
+      </section>
+
+      ${r.rules.length ? `
+        <h2>Rules</h2>
+        <div class="prose"><ul>${r.rules.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
+
+      <h2>Rest actions</h2>
+      <div class="cards">${r.actions.map(renderRestAction).join('')}</div>
+
+      ${r.notes.length || r.open.length ? `
+        <div class="class-notes ailment-notes">
+          ${r.notes.length ? `<p class="eyebrow">Notes</p><ul>${r.notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>` : ''}
+          ${r.open.length ? `<p class="eyebrow">Open</p><ul>${r.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>` : ''}
+        </div>` : ''}
+    `;
+  } catch (err) {
+    showError(root, err);
+  }
 }
 
 function renderAilmentSidebar(ailments) {

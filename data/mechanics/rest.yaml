@@ -1,0 +1,47 @@
+# Rest: rest types and rest actions. Shown on webapp/rest.html.
+# All text entries are one line each, no line breaks (same rule as cards).
+
+name: Rest
+summary: "Recovery is slow. Rests give only a few actions, and every action is a choice."
+
+rests:
+  - name: Short rest
+    actions: 2
+  - name: Long rest
+    actions: 4
+
+rules:
+  - "Each action type can only be chosen once per rest."
+  - "Unlike Daggerheart, rest actions have fixed amounts (1) instead of dice."
+
+actions:
+  - name: Clear HP
+    cost: 1
+    text:
+      - "Clear 1 HP."
+  - name: Clear Stress
+    cost: 1
+    text:
+      - "Clear 1 Stress."
+  - name: Gain Hope
+    cost: 1
+    text:
+      - "Gain 1 Hope."
+  - name: Repair Armor
+    cost: 1
+    text:
+      - "Clear 1 Armor Slot."
+  - name: Treat ailment
+    cost: 3
+    requires: "As the Doctor's patient (House Call), or at a medbay or hospital."
+    text:
+      - "Remove one ailment that lasts until treated."
+      - "Costs 3 rest actions, so it's only possible during a long rest. Treatment is meant to be expensive and punishing."
+
+notes:
+  - "With 4 base actions and no duplicates, a long rest without treatment is effectively \"one of each\"."
+  - "Haunted (Stress ailment) gives 1 rest action fewer during every rest."
+  - "House Call (Doctor): the patient clears 1 additional HP or Stress and can use Treat ailment."
+
+open:
+  - "Other extra rest options."

@@ -218,6 +218,7 @@ a.tile:hover { border-color: var(--domain); }
   transition: border-color 0.15s, background 0.15s;
 }
 .link-field:hover { border-color: var(--accent); background: #100505; }
+.link-field + .link-field { margin-top: 1rem; }
 .link-field-title { color: var(--accent); font-size: 1.2rem; letter-spacing: 0.03em; }
 .link-field-domains { display: flex; gap: 0.5rem; flex-wrap: wrap; flex: 1; }
 .link-field-domains span {
@@ -426,6 +427,11 @@ a.ring-class:hover { color: var(--text); border-color: #444; }
 .rule-box h4 { color: var(--accent); font-size: 1.15rem; font-weight: normal; letter-spacing: 0.02em; }
 
 .ailment-notes { margin-top: 4rem; }
+
+/* ---------- Rest page ---------- */
+
+.requires { color: var(--muted); font-size: 0.84rem; border-top: 1px dashed #222; padding-top: 0.6rem; margin-top: auto; }
+.requires .eyebrow { margin-right: 0.4rem; }
 
 @media (max-width: 800px) {
   .layout { grid-template-columns: 1fr; gap: 0; }

@@ -9,7 +9,7 @@ A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / 
 > Where things live:
 > - Classes: `data/classes/` (format and creation workflow: `.claude/create-class.md`)
 > - Domain and found cards: `data/domains/`, `data/found/` (format and workflow: `.claude/create-domain-cards.md`)
-> - Detailed mechanics (ailments, …): `data/mechanics/`, indexed in [Mechanics.md](Mechanics.md)
+> - Detailed mechanics (rest, ailments, …): `data/mechanics/`, indexed in [Mechanics.md](Mechanics.md)
 
 ---
 
@@ -37,26 +37,6 @@ A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / 
 ### Ideas under consideration (not decided)
 
 - Scars from *Avoid Death* as a central horror element (dropped from the ailment tables for now).
-
----
-
-## Rest Rules
-
-| Rest | Actions |
-|---|---|
-| Short rest | 2 actions |
-| Long rest | 4 actions |
-
-**No duplicates:** each action type can only be chosen once per rest.
-
-Base rest actions:
-
-- Clear 1 HP
-- Clear 1 Stress
-- Gain 1 Hope
-- Clear 1 Armor Slot
-
-Special rest action: **Treat ailment** (3 actions, only as the Doctor's patient or at a medbay/hospital; see ailments).
 
 ---
 
@@ -110,6 +90,5 @@ Open:
    - Tech cards cost "Scrap *or* Hope"
    - Scrap is Mechanic-only; Tech cards don't use it
    - Scrap as narrative items instead of a number
-2. **Rest options:** Treat ailment is decided; other extra rest options still open.
-3. **Domain cards:** level 1 is done for all four domains; levels 2–4 and their power curve are still open.
-4. **Armor list:** HeartCore armor with thresholds and Armor Scores.
+2. **Domain cards:** level 1 is done for all four domains; levels 2–4 and their power curve are still open.
+3. **Armor list:** HeartCore armor with thresholds and Armor Scores.

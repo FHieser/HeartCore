@@ -9,7 +9,7 @@ Help the user design domain cards for **HeartCore**, a modern horror / SCP-style
 
 ## Before starting
 
-1. Read `Baseline.md` in the repo root. It is the source of truth for the rest economy, domains, the **Cards** section (card economy) and open topics. Classes live in `data/classes/`, ailments in `data/mechanics/ailments.yaml`. The card format is defined below.
+1. Read `Baseline.md` in the repo root. It is the source of truth for domains, the **Cards** section (card economy) and open topics. Classes live in `data/classes/`, the rest economy in `data/mechanics/rest.yaml`, ailments in `data/mechanics/ailments.yaml`. The card format is defined below.
 2. Read the domain's file in `data/domains/` (`body.yaml`, `mind.yaml`, `tech.yaml`, `aid.yaml`) to see which cards and directions already exist.
 3. Ask which domain and level the user wants to work on, unless they already said. Default order: level 1 for all four domains first, then levels 2–4.
 

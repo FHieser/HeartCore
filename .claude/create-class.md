@@ -9,7 +9,7 @@ Help the user design a class for **HeartCore**, a modern horror / SCP-style vari
 
 ## Before starting
 
-1. Look for the project's design document: `Baseline.md` in the repo root (or `README.md` if that's where the rules live). Read it to learn the current rules: rest economy, domains, the domain ring and open topics. The existing classes live in `data/classes/*.yaml`; read them too. Treat that document as the source of truth over anything in this skill.
+1. Look for the project's design document: `Baseline.md` in the repo root (or `README.md` if that's where the rules live). Read it to learn the current rules: domains, the domain ring and open topics. The existing classes live in `data/classes/*.yaml`, the rest economy in `data/mechanics/rest.yaml` and ailments in `data/mechanics/ailments.yaml`; read them too. Treat that document as the source of truth over anything in this skill.
 2. If no design document is available, use the **Reference** section at the end of this skill and tell the user in one line that you're working from it.
 3. Ask which class the user wants to create or rework, unless they already said.
 
