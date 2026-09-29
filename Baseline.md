@@ -291,6 +291,6 @@ The classes live in [`data/classes/`](data/classes/), one YAML file each (format
    - Tech cards cost "Scrap *or* Hope"
    - Scrap is Mechanic-only; Tech cards don't use it
    - Scrap as narrative items instead of a number
-2. **Improved rest options:** treating wounds, trauma from Stress/HP damage, and what House Call unlocks.
+2. **Improved rest options:** House Call unlocks Treat ailment (see Mechanics.md → Ailments). Other rest options still open.
 3. **Domain cards:** design levels 1–4 for all four domains, fitting the rest economy. Economy and format are decided (see Cards); vault triggers and card types are still open.
 4. **Starting stats:** HP, Evasion and Stress per class.

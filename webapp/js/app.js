@@ -191,6 +191,47 @@ async function loadCards(id) {
   return Array.isArray(data) ? data : [];
 }
 
+// Ailments: rules plus the physical and stress d12 tables (data/mechanics/ailments.yaml).
+const AILMENT_TABLES = [
+  { id: 'physical', color: '#d0453a' },
+  { id: 'stress', color: '#9a6bdc' },
+];
+const LASTS_LABELS = {
+  instant: 'Instant',
+  scene: 'Until end of scene',
+  short_rest: 'Until short rest',
+  long_rest: 'Until long rest',
+  treated: 'Until treated',
+  permanent: 'Permanent',
+  special: 'Special',
+};
+
+let ailmentsPromise;
+function loadAilments() {
+  ailmentsPromise ??= fetchText(`${DATA_ROOT}data/mechanics/ailments.yaml`).then(text => {
+    const a = jsyaml.load(text) || {};
+    return {
+      name: a.name || 'Ailments',
+      summary: a.summary || '',
+      rules: asList(a.rules),
+      treatment: a.treatment ? { name: a.treatment.name || '', text: asList(a.treatment.text) } : null,
+      notes: asList(a.notes),
+      open: asList(a.open),
+      tables: AILMENT_TABLES.map(({ id, color }) => {
+        const t = a[id] || {};
+        return {
+          id,
+          color,
+          name: t.name || id,
+          trigger: t.trigger || '',
+          entries: asList(t.table).map(e => ({ ...e, text: asList(e.text) })),
+        };
+      }),
+    };
+  });
+  return ailmentsPromise;
+}
+
 function domainColor(id, index = 0) {
   return DOMAIN_COLORS[id] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 }
@@ -200,7 +241,7 @@ function domainColor(id, index = 0) {
 function renderNav(current) {
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
-  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes']]
+  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['ailments', 'ailments.html', 'Ailments']]
     .map(([id, href, label]) => `<a href="${href}" class="${id === current ? 'current' : ''}">${label}</a>`)
     .join('');
 }
@@ -229,7 +270,9 @@ async function initOverview() {
   const root = document.getElementById('content');
   renderNav('overview');
   try {
-    const [sections, domains, classes] = await Promise.all([loadBaseline(), loadDomains(), loadClasses()]);
+    const [sections, domains, classes, ailments] = await Promise.all([
+      loadBaseline(), loadDomains(), loadClasses(), loadAilments().catch(() => null),
+    ]);
     const all = [...domains, FOUND];
     const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
     const total = cardLists.reduce((n, l) => n + l.length, 0);
@@ -267,6 +310,16 @@ async function initOverview() {
         </span>
         <span class="eyebrow">${classes.length} ${classes.length === 1 ? 'class' : 'classes'}</span>
       </a>
+
+      <h2>Mechanics</h2>
+      ${ailments ? `
+        <a class="link-field" href="ailments.html">
+          <span class="link-field-title">Ailments →</span>
+          <span class="link-field-domains">
+            ${ailments.tables.map(t => `<span style="--domain:${t.color}">${escapeHtml(t.name)}</span>`).join('')}
+          </span>
+          <span class="eyebrow">${plural(ailments.tables.reduce((n, t) => n + t.entries.length, 0), 'ailment')}</span>
+        </a>` : '<p class="status">No mechanics yet.</p>'}
     `;
   } catch (err) {
     showError(root, err);
@@ -520,6 +573,102 @@ async function initClasses() {
         <p class="lede">Each class has two domains, a main mechanic, a Flair and a Hope feature. Classes are archetypes, not professions.</p>
       </section>
       ${classes.map(c => renderClassSection(c, domains)).join('')}
+    `;
+
+    watchSections(sidebar);
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  } catch (err) {
+    showError(root, err);
+  }
+}
+
+// ---------- Ailments page ----------
+
+const ailmentId = (table, entry) => `${table.id}-${slug(entry.name || String(entry.roll))}`;
+
+function renderAilment(table, entry) {
+  const stats = [LASTS_LABELS[entry.lasts] || entry.lasts].filter(Boolean);
+  return `
+    <article class="game-card" id="${ailmentId(table, entry)}">
+      <header>
+        <h4>${escapeHtml(entry.name || 'Unnamed')}</h4>
+        <span class="roll" title="d12 result">${escapeHtml(entry.roll ?? '?')}</span>
+      </header>
+      <div class="card-stats">${stats.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
+      <ul class="features">${entry.text.map(t => `<li>${highlightRules(escapeHtml(t))}</li>`).join('')}</ul>
+    </article>`;
+}
+
+function renderAilmentSection(table) {
+  return `
+    <section class="domain-section" id="${table.id}" style="--domain:${table.color}">
+      <header class="domain-head">
+        <p class="eyebrow">d12 table · ${plural(table.entries.length, 'ailment')}</p>
+        <h2>${escapeHtml(table.name)}</h2>
+        ${table.trigger ? `<p class="lede"><span class="eyebrow">Trigger</span> ${escapeHtml(table.trigger)}</p>` : ''}
+      </header>
+      <div class="cards ailment-cards">${table.entries.map(e => renderAilment(table, e)).join('')}</div>
+    </section>`;
+}
+
+function renderAilmentSidebar(ailments) {
+  return `
+    <p class="eyebrow">Contents</p>
+    <ol class="toc">
+      <li><a class="toc-domain" href="#rules">Rules</a></li>
+      ${ailments.tables.map(t => `
+        <li style="--domain:${t.color}">
+          <a class="toc-domain" href="#${t.id}" data-section="${t.id}">${escapeHtml(t.name)}</a>
+          <ol>${t.entries.map(e => `
+            <li><a class="toc-card" href="#${ailmentId(t, e)}">${escapeHtml(e.roll ?? '')}. ${escapeHtml(e.name || '')}</a></li>`).join('')}
+          </ol>
+        </li>`).join('')}
+    </ol>`;
+}
+
+async function initAilments() {
+  const root = document.getElementById('content');
+  const sidebar = document.getElementById('sidebar');
+  renderNav('ailments');
+  try {
+    const a = await loadAilments();
+    const notes = a.notes;
+
+    sidebar.innerHTML = renderAilmentSidebar(a);
+    root.innerHTML = `
+      <section class="domains-intro" id="rules">
+        <p class="eyebrow">Mechanics</p>
+        <h1>${escapeHtml(a.name)}</h1>
+        ${a.summary ? `<p class="lede">${escapeHtml(a.summary)}</p>` : ''}
+
+        <ul class="domain-list">
+          ${a.tables.map(t => `
+            <li style="--domain:${t.color}">
+              <a href="#${t.id}">${escapeHtml(t.name)}</a>
+              <span>${escapeHtml(t.trigger)}</span>
+              <span class="eyebrow">${plural(t.entries.length, 'ailment')}</span>
+            </li>`).join('')}
+        </ul>
+
+        ${a.rules.length ? `
+          <h3 class="level-head">Resolving an ailment</h3>
+          <div class="prose"><ul>${a.rules.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul></div>` : ''}
+
+        ${a.treatment ? `
+          <div class="rule-box">
+            <p class="eyebrow">Rest action</p>
+            <h4>${escapeHtml(a.treatment.name)}</h4>
+            <ul class="features">${a.treatment.text.map(t => `<li>${highlightRules(escapeHtml(t))}</li>`).join('')}</ul>
+          </div>` : ''}
+      </section>
+
+      ${a.tables.map(renderAilmentSection).join('')}
+
+      ${notes.length || a.open.length ? `
+        <div class="class-notes ailment-notes">
+          ${notes.length ? `<p class="eyebrow">Notes</p><ul>${notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>` : ''}
+          ${a.open.length ? `<p class="eyebrow">Open</p><ul>${a.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>` : ''}
+        </div>` : ''}
     `;
 
     watchSections(sidebar);

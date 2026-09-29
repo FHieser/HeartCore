@@ -389,6 +389,33 @@ a.ring-class:hover { color: var(--text); border-color: #444; }
 .class-notes .eyebrow { margin-right: 0.4rem; }
 .class-notes ul { padding-left: 1.2rem; display: grid; gap: 0.25rem; }
 
+/* ---------- Ailments page ---------- */
+
+.roll {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--domain);
+  border: 1px solid var(--domain);
+  min-width: 1.9rem;
+  text-align: center;
+  padding: 0.1rem 0.3rem;
+}
+.ailment-cards { margin-top: 1.5rem; }
+
+.rule-box {
+  margin-top: 1.5rem;
+  max-width: 75ch;
+  background: var(--panel);
+  border: 1px solid var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  padding: 1rem 1.2rem;
+  display: grid;
+  gap: 0.5rem;
+}
+.rule-box h4 { color: var(--accent); font-size: 1.15rem; font-weight: normal; letter-spacing: 0.02em; }
+
+.ailment-notes { margin-top: 4rem; }
+
 @media (max-width: 800px) {
   .layout { grid-template-columns: 1fr; gap: 0; }
   .sidebar {
