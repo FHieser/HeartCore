@@ -4,6 +4,7 @@ name: Doctor
 domains: [mind, aid]
 fantasy: "The one making the hard calls. Keeps people alive, but can't save everyone."
 examples: [paramedic, nurse, surgeon, psychologist, first aider]
+stats: { evasion: 10, hp: 5, stress: 6 }
 
 features:
   main:

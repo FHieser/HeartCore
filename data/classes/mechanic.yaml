@@ -4,6 +4,7 @@ name: Mechanic
 domains: [body, tech]
 fantasy: "The fixer. Gets the generator running and builds what the moment needs from junk."
 examples: [field engineer, electrician, janitor, car mechanic, handyman]
+stats: { evasion: 10, hp: 5, stress: 5 }
 
 features:
   main:

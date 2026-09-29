@@ -160,6 +160,7 @@ function loadClasses() {
         domains: asList(c.domains).map(d => slug(String(d))),
         fantasy: c.fantasy || '',
         examples: asList(c.examples),
+        stats: c.stats || {},
         features: Object.fromEntries(FEATURE_KINDS.map(([kind]) => {
           const f = features[kind] || {};
           return [kind, {
@@ -521,6 +522,16 @@ function renderFeature(cls, [kind, label]) {
     </article>`;
 }
 
+const CLASS_STATS = [['evasion', 'Evasion'], ['hp', 'HP'], ['stress', 'Stress']];
+
+function renderClassStats(stats) {
+  const shown = CLASS_STATS.filter(([key]) => stats[key] != null);
+  if (!shown.length) return '';
+  return `<div class="class-stats">${shown.map(([key, label]) => `
+    <span class="stat"><span class="stat-value">${escapeHtml(stats[key])}</span><span class="eyebrow">${label}</span></span>`).join('')}
+  </div>`;
+}
+
 function renderClassSection(cls, domains) {
   const colors = cls.domains.map(id => domainColor(id, domains.findIndex(d => d.id === id)));
   const names = cls.domains.map(id => domains.find(d => d.id === id)?.name || id);
@@ -533,6 +544,7 @@ function renderClassSection(cls, domains) {
         ${cls.fantasy ? `<p class="lede"><em>${escapeHtml(cls.fantasy)}</em></p>` : ''}
         <div class="domain-classes"><span class="eyebrow">Domains</span>${domainTags(cls.domains, domains)}</div>
         ${cls.examples.length ? `<p class="class-examples"><span class="eyebrow">Examples</span> ${escapeHtml(cls.examples.join(', '))}</p>` : ''}
+        ${renderClassStats(cls.stats)}
       </header>
       <div class="cards class-cards">${FEATURE_KINDS.map(k => renderFeature(cls, k)).join('')}</div>
       ${cls.loop || cls.open.length ? `

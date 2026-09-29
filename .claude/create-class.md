@@ -116,6 +116,21 @@ Only after the user confirms everything:
 2. Offer to save it as `data/classes/<id>.yaml` (the webapp picks it up automatically) and to add its loop to the loop table in the design document's workflow section, plus any new **(open)** points under Open Topics.
 3. Write files only if the user agrees.
 
+## Starting stats
+
+- **Hope:** start with 2, max **4**.
+- **Traits:** standard Daggerheart array: +2, +1, +1, +0, +0, −1.
+- **Evasion, HP, Stress:** set by class (`stats` in the class file). Keep new classes within the existing range:
+
+| Class | Evasion | HP | Stress |
+|---|---|---|---|
+| Soldier | 9 | 6 | 5 |
+| Mechanic | 10 | 5 | 5 |
+| Doctor | 10 | 5 | 6 |
+| Scientist | 11 | 4 | 6 |
+
+- Higher Evasion goes with lower HP. Classes with the **Mind** domain get +1 Stress.
+
 ## Class format
 
 The format for `data/classes/<id>.yaml`. Every `text` entry is one physical line in double quotes (same rule as card text); `name` can be omitted while a feature is unnamed; Hope `cost` defaults to 3.
@@ -125,6 +140,7 @@ name: [Class Name]
 domains: [domain, domain]       # body | mind | tech | aid
 fantasy: "[Fantasy line.]"
 examples: [example, example, example]
+stats: { evasion: 10, hp: 5, stress: 5 }   # see Starting stats above
 
 features:
   main:

@@ -363,6 +363,17 @@ a.ring-class:hover { color: var(--text); border-color: #444; }
 .class-examples .eyebrow { margin-right: 0.4rem; }
 .class-cards { margin-top: 1.5rem; }
 
+.class-stats { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem; }
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 0.3rem 0.7rem;
+}
+.stat-value { color: var(--text); font-family: var(--mono); font-size: 1.1rem; }
+
 .options {
   list-style: none;
   display: grid;

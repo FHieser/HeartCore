@@ -4,6 +4,7 @@ name: Scientist
 domains: [mind, tech]
 fantasy: "The analyst. Understands what's happening, and pays for it."
 examples: [researcher, lab tech, grad student, journalist, hacker]
+stats: { evasion: 11, hp: 4, stress: 6 }
 
 features:
   main:

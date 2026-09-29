@@ -4,6 +4,7 @@ name: Soldier
 domains: [body, aid]
 fantasy: "The protector. Stands between the others and the thing in the dark."
 examples: [marine, security guard, cop, firefighter, bouncer]
+stats: { evasion: 9, hp: 6, stress: 5 }
 
 features:
   main:
