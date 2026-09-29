@@ -13,7 +13,7 @@ rules:
   - "The tables are a severity ladder: the higher the roll, the worse the ailment. Both end with losing the character: death on the physical table, madness on the Stress table."
   - "Physical ailments are harsher than Stress ailments."
   - "Base Daggerheart still applies: while your Stress is maxed, any Stress you would mark is marked as HP instead. This doesn't trigger another Stress ailment."
-  - "The Soldier's Adrenaline suppresses the Stress ailment until the end of the scene; then it's rolled as normal."
+  - "The Soldier's Adrenaline suppresses the Stress ailment while it's active; when Adrenaline ends (end of scene or Stress reduced), it's rolled as normal."
 
 treatment:
   name: Treat ailment
