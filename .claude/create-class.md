@@ -113,7 +113,7 @@ Once the mechanics are locked, offer names for the class (if needed) and for eac
 Only after the user confirms everything:
 
 1. Show the class in the YAML format below.
-2. Offer to save it as `data/classes/<id>.yaml` (the webapp picks it up automatically) and to add its loop to the loop table in the design document's workflow section, plus any new **(open)** points under Open Topics.
+2. Offer to save it as `data/classes/<id>.yaml` (the webapp picks it up automatically), with the loop in `loop` and anything undecided in `open`.
 3. Write files only if the user agrees.
 
 ## Starting stats

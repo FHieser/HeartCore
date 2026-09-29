@@ -9,7 +9,7 @@ Help the user design domain cards for **HeartCore**, a modern horror / SCP-style
 
 ## Before starting
 
-1. Read `Baseline.md` in the repo root. It is the source of truth for the rest economy, domains, classes, the **Cards** section (card economy, card format) and open topics.
+1. Read `Baseline.md` in the repo root. It is the source of truth for the rest economy, domains, the **Cards** section (card economy) and open topics. Classes live in `data/classes/`, ailments in `data/mechanics/ailments.yaml`. The card format is defined below.
 2. Read the domain's file in `data/domains/` (`body.yaml`, `mind.yaml`, `tech.yaml`, `aid.yaml`) to see which cards and directions already exist.
 3. Ask which domain and level the user wants to work on, unless they already said. Default order: level 1 for all four domains first, then levels 2–4.
 
@@ -60,23 +60,32 @@ Higher cards **deepen one of the 3 directions** or connect two of them. Check `B
 
 ## Card format
 
-Follow `Baseline.md` → Cards → Card format. Current format:
+Cards live in YAML files: one file per domain in `data/domains/` (`body.yaml`, `mind.yaml`, `tech.yaml`, `aid.yaml`), found cards in `data/found/found.yaml`. The webapp reads them directly.
 
 ```yaml
-- name: Card Name
-  type: ability
+- name: Card Name          # required
+  type: ability            # required: ability | item | artifact | curse | … (open)
   source: { kind: domain, domain: body, level: 1 }
-  slots: 1
-  recall: 1
-  text:
-    - "First feature, on one line."
+                           # kind: domain | found; domain (body | mind | tech | aid) and level (1–4) only for kind: domain
+  slots: 1                 # loadout slots, default 1
+  recall: 1                # Stress to recall from the vault mid-scene
+  text:                    # one entry per feature
+    - "First feature, on one line. Activation, costs, duration and vault effects all go here."
     - "Second feature, if the card has one."
+  flavor: "Optional flavor line."   # optional
 ```
+
+Found cards use `source: { kind: found }` and have no domain or level.
 
 Format rules:
 - `text` is a **list with one entry per feature**, even for a single feature.
-- Each entry is on **one physical line** in double quotes. No line breaks, no `>` / `|` block styles, no wrapping. A future frontend depends on this.
+- Each entry is on **one physical line** in double quotes. No line breaks, no `>` / `|` block styles, no wrapping. The webapp depends on this.
 - Group cards in the file under `# --- Level N ---` comments.
+
+Patterns for card text (not fields, but useful):
+- Standard activations: Passive / costs Hope / costs Stress / X uses per rest / One-shot.
+- Drawbacks, especially on found cards.
+- Vault interactions: "When vaulted…", "Vaulted by…", "Can't be vaulted voluntarily."
 
 ## Guardrails
 
@@ -84,6 +93,6 @@ Format rules:
 - **Low power ceiling:** cards only go to level 4. Players never outgrow the horror.
 - **Lethal and fast:** characters aren't expected to survive a campaign. Cards help you survive a moment, not make you safe.
 - **Anyone can be here:** cards must work for civilians and professionals alike.
-- **Vault hooks:** cards may interact with the vault (recall, "when vaulted…", "can't be vaulted voluntarily"). Vault triggers (injury, panic, anomaly effects) are still **(open)**; check `Baseline.md`.
+- **Vault hooks:** cards may interact with the vault (recall, "when vaulted…", "can't be vaulted voluntarily"). Ailments already vault cards (Disarmed, Concussion, Locked Up); other vault triggers are still **(open)**, check `Baseline.md`.
 - Use Daggerheart terms consistently: Hope, Fear, Stress, Hit Points, Armor Slots, Evasion, damage thresholds, traits (Agility, Strength, Finesse, Instinct, Presence, Knowledge), ranges (Melee, Very Close, Close, Far), advantage, Help an Ally.
 - Don't reproduce text from the official Daggerheart books; describe mechanics in your own words.
