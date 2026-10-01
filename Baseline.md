@@ -9,7 +9,7 @@ A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / 
 > Where things live:
 > - Classes: `data/classes/` (format and creation workflow: `.claude/create-class.md`)
 > - Domain and found cards: `data/domains/`, `data/found/` (format and workflow: `.claude/create-domain-cards.md`)
-> - Detailed mechanics (rest, ailments, …): `data/mechanics/`, indexed in [Mechanics.md](Mechanics.md)
+> - Detailed mechanics (rest, ailments, equipment, …): `data/mechanics/`, indexed in [Mechanics.md](Mechanics.md)
 
 ---
 
@@ -27,12 +27,6 @@ A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / 
 - **Stress**
 - **Hope**
 - **Armor** (Armor Slots)
-
-### Armor
-
-- Daggerheart armor rules apply: base thresholds + level, Armor Score = Armor Slots.
-- **Street clothes** replace Daggerheart's unarmored rule: base thresholds **3/8**, Armor Score **0**, **+2 Evasion**. Anyone without real armor wears street clothes.
-- HeartCore armor list (vests, protective gear, …). **(open)**
 
 ### Ideas under consideration (not decided)
 
@@ -73,7 +67,8 @@ Design notes:
 - Start with **2 domain cards**; gain **1 domain card automatically** on each level-up (max 5 from levelling). The card's level must be equal to or lower than the character's level.
 - **2 advancements** per level-up. Daggerheart's "take an additional domain card" advancement is removed.
 - **Loadout** of 5 slots; the rest go to the **vault**. A vaulted card can be recalled mid-scene by marking Stress equal to its Recall Cost, or for free during a rest.
-- **Found cards:** extra cards gained during play (items, artifacts, abilities, curses, …). They are **independent of character level**, go into the loadout like any other card, and may take **more than one slot**. The GM balances powerful finds through slot size. How long a found card lasts depends on the card. If the loadout is full, something has to be packed into the vault: you can only handle so much.
+- **Ordinary vs. extraordinary:** mundane gear (armor, weapons, consumables, tools) is equipment (`data/mechanics/equipment.yaml`) and never takes loadout slots. Anything special or anomalous is a found card.
+- **Found cards:** extraordinary things gained during play (special items like alien armor or a heavy laser, artifacts, abilities, curses, …). They can take **0 slots** for small finds. They are **independent of character level**, go into the loadout like any other card, and may take **more than one slot**. The GM balances powerful finds through slot size. How long a found card lasts depends on the card. If the loadout is full, something has to be packed into the vault: you can only handle so much.
 
 Open:
 - What else pushes cards into the vault. Candidates: **anomaly effects** (GM moves, adversary features). Injury and panic are now partly covered by ailments (Disarmed, Concussion, Locked Up). **(open)**
@@ -91,4 +86,3 @@ Open:
    - Scrap is Mechanic-only; Tech cards don't use it
    - Scrap as narrative items instead of a number
 2. **Domain cards:** level 1 is done for all four domains; levels 2–4 and their power curve are still open.
-3. **Armor list:** HeartCore armor with thresholds and Armor Scores.

@@ -75,7 +75,7 @@ Cards live in YAML files: one file per domain in `data/domains/` (`body.yaml`, `
   flavor: "Optional flavor line."   # optional
 ```
 
-Found cards use `source: { kind: found }` and have no domain or level.
+Found cards use `source: { kind: found }` and have no domain or level. They're for **extraordinary** things only (special items, artifacts, curses); mundane gear belongs in `data/mechanics/equipment.yaml`. `slots: 0` is allowed for small finds.
 
 Format rules:
 - `text` is a **list with one entry per feature**, even for a single feature.

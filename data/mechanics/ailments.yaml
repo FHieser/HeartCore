@@ -9,10 +9,12 @@ summary: "Lasting mental and physical harm. Ailments are what makes wounds and f
 rules:
   - "Roll a d12 on the table for the ailment type. The result is the ailment; no one chooses."
   - "If you already have that ailment, reroll."
+  - "Ailments stack: you can have any number of different ailments at once."
   - "Each ailment states how long it lasts. Many take effect immediately and are over once resolved."
   - "The tables are a severity ladder: the higher the roll, the worse the ailment. Both end with losing the character: death on the physical table, madness on the Stress table."
   - "Physical ailments are harsher than Stress ailments."
   - "Base Daggerheart still applies: while your Stress is maxed, any Stress you would mark is marked as HP instead. This doesn't trigger another Stress ailment."
+  - "A Stress ailment comes on top of being Vulnerable at max Stress; it doesn't replace it."
   - "The Soldier's Adrenaline suppresses the Stress ailment while it's active; when Adrenaline ends (end of scene or Stress reduced), it's rolled as normal."
 
 treatment:
@@ -28,11 +30,7 @@ notes:
 
 open:
   - "Scars (practically permanent injuries, e.g. from Avoid Death) are dropped for now; may come back later."
-  - "What happens when you already have every rerollable ailment on a table."
-  - "Does a Stress ailment replace or add to being Vulnerable at max Stress?"
-  - "Stacking: can you have several ailments, and is there a limit?"
   - "Relation to the vault: do ailments replace the injury and panic vault triggers (see Baseline.md → Cards)?"
-  - "Whether any cards (Aid: First Aid, Calm) interact with ailments."
 
 physical:
   name: Physical ailments

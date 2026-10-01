@@ -1,0 +1,59 @@
+# Equipment: ordinary gear (armor, weapons, consumables, tools).
+# Extraordinary items (alien armor, heavy laser, artifacts, curses) are found cards in data/found/.
+# All text entries are one line each, no line breaks (same rule as cards).
+
+name: Equipment
+summary: "Ordinary modern gear. A bit weaker than Daggerheart equipment: protection and power are scarce."
+
+rules:
+  - "Ordinary vs. extraordinary: mundane gear is equipment; anything special or anomalous is a found card."
+  - "Equipment never takes loadout slots and can't be vaulted. It's simply part of the character sheet."
+
+armor:
+  rules:
+    - "Daggerheart armor rules apply: add your level to the base thresholds; Armor Score = number of Armor Slots."
+    - "Street clothes replace Daggerheart's unarmored rule. Anyone without real armor wears street clothes."
+    - "Armor is the main protection against Severe hits, and so against physical ailments."
+  # thresholds: [major, severe] base values (level is added)
+  list:
+    - name: Street clothes
+      thresholds: [3, 8]
+      score: 0
+      effect: "+2 Evasion"
+    - name: Work jacket
+      thresholds: [4, 9]
+      score: 1
+      effect: "+1 Evasion"
+    - name: Motorcycle leathers
+      thresholds: [5, 11]
+      score: 2
+    - name: Stab vest
+      thresholds: [5, 12]
+      score: 3
+    - name: Ballistic vest
+      thresholds: [6, 14]
+      score: 3
+      effect: "−1 Evasion"
+    - name: Riot gear
+      thresholds: [7, 16]
+      score: 3
+      effect: "−2 Evasion, −1 Agility"
+
+weapons:
+  rules: []
+  list: []
+
+consumables:
+  rules: []
+  list: []
+
+# Reusable everyday items (flashlight, crowbar, radio, lighter, …).
+tools:
+  rules: []
+  list: []
+
+open:
+  - "Special mundane armor with a feature (e.g. hazmat suit, bomb suit)."
+  - "Weapons: format, damage and ranges, a bit weaker than Daggerheart."
+  - "Consumables: format and first examples (medkits, flares, painkillers, …)."
+  - "Tools: format and first examples."

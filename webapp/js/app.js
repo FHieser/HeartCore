@@ -19,7 +19,7 @@ const FALLBACK_COLORS = ['#d07f3a', '#c24f8f', '#7c8fd6', '#8fae3b'];
 const FOUND = {
   id: 'found',
   name: 'Found',
-  covers: 'Items, artifacts, abilities and curses picked up during play. Independent of character level; may take more than one slot.',
+  covers: 'Extraordinary finds picked up during play: special items, artifacts, abilities and curses. Independent of character level; may take 0 or more slots.',
 };
 
 // ---------- Fetching ----------

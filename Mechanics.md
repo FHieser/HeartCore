@@ -12,6 +12,12 @@ Short and long rests, rest actions (including Treat ailment) and what modifies t
 
 → [data/mechanics/rest.yaml](data/mechanics/rest.yaml) · webapp: `rest.html`
 
+## Equipment
+
+Armor (rules, street clothes, armor list), weapons, consumables and artifacts.
+
+→ [data/mechanics/equipment.yaml](data/mechanics/equipment.yaml)
+
 ## Ailments
 
 Lasting mental and physical harm: triggers, resolving, both d12 tables, treatment and open questions.
