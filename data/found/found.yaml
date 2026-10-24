@@ -1,5 +1,0 @@
-# Found cards: extraordinary finds (special items, artifacts, abilities, curses, …). Level-independent.
-# Mundane gear is equipment (data/mechanics/equipment.yaml), not a card.
-# Format: see .claude/create-domain-cards.md → Card format. Use source: { kind: found }.
-
-[]

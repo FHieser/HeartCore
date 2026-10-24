@@ -8,7 +8,7 @@ A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / 
 >
 > Where things live:
 > - Classes: `data/classes/` (format and creation workflow: `.claude/create-class.md`)
-> - Domain and found cards: `data/domains/`, `data/found/` (format and workflow: `.claude/create-domain-cards.md`)
+> - Domain and HCore cards: `data/domains/`, `data/hcore/` (format and workflow: `.claude/create-domain-cards.md`)
 > - Detailed mechanics (rest, ailments, equipment, …): `data/mechanics/`, indexed in [Mechanics.md](Mechanics.md)
 
 ---
@@ -77,13 +77,12 @@ Design notes:
 - **2 advancements** per level-up. Daggerheart's "take an additional domain card" advancement is removed.
 - **Proficiency stays at 1.** Daggerheart's Proficiency increase at level 2 and the Proficiency advancement are removed; damage only grows through better weapons.
 - **Loadout** of 5 slots; the rest go to the **vault**. A vaulted card can be recalled mid-scene by marking Stress equal to its Recall Cost, or for free during a rest.
-- **Ordinary vs. extraordinary:** mundane gear (armor, shields, weapons, consumables) is equipment (`data/mechanics/equipment.yaml`) and never takes loadout slots. Anything special or anomalous is a found card.
-- **Found cards:** extraordinary things gained during play (special items like alien armor or a heavy laser, artifacts, abilities, curses, …). They can take **0 slots** for small finds. They are **independent of character level**, go into the loadout like any other card, and may take **more than one slot**. The GM balances powerful finds through slot size. How long a found card lasts depends on the card. If the loadout is full, something has to be packed into the vault: you can only handle so much.
+- **Ordinary vs. extraordinary:** mundane gear (armor, shields, weapons, consumables) is equipment (`data/mechanics/equipment.yaml`) and never takes loadout slots. Anything special or anomalous is an HCore card.
+- **HCore cards:** extraordinary cards outside the domains, in four types: **item** (special gear like alien armor or a heavy laser), **artifact**, **ability** and **curse**. Guidelines and cards are in `data/hcore/hcore.yaml`. Most are gained during play; abilities can also come from a character's background. They are **independent of character level**, go into the loadout like any other card, and may take **0 or more slots**. The GM balances powerful ones through slot size. How long an HCore card lasts depends on the card. If the loadout is full, something has to be packed into the vault: you can only handle so much.
 
 Open:
 - What else pushes cards into the vault. Candidates: **anomaly effects** (GM moves, adversary features). Injury and panic are now partly covered by ailments (Disarmed, Concussion, Locked Up). **(open)**
-- List of card types. **(open)**
-- Taking a dead teammate's card as a found card. **(open)**
+- Taking a dead teammate's card as an HCore card. **(open)**
 
 ---
 

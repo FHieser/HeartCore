@@ -60,13 +60,13 @@ Higher cards **deepen one of the 3 directions** or connect two of them. Check `B
 
 ## Card format
 
-Cards live in YAML files: one file per domain in `data/domains/` (`body.yaml`, `mind.yaml`, `tech.yaml`, `aid.yaml`), found cards in `data/found/found.yaml`. The webapp reads them directly.
+Cards live in YAML files: one file per domain in `data/domains/` (`body.yaml`, `mind.yaml`, `tech.yaml`, `aid.yaml`), HCore cards in `data/hcore/hcore.yaml` (under `cards:`). The webapp reads them directly.
 
 ```yaml
 - name: Card Name          # required
-  type: ability            # required: ability | item | artifact | curse | … (open)
+  type: ability            # required: ability (domain cards); item | artifact | ability | curse (HCore cards)
   source: { kind: domain, domain: body, level: 1 }
-                           # kind: domain | found; domain (body | mind | tech | aid) and level (1–4) only for kind: domain
+                           # kind: domain | hcore; domain (body | mind | tech | aid) and level (1–4) only for kind: domain
   slots: 1                 # loadout slots, default 1
   recall: 1                # Stress to recall from the vault mid-scene
   text:                    # one entry per feature
@@ -75,7 +75,7 @@ Cards live in YAML files: one file per domain in `data/domains/` (`body.yaml`, `
   flavor: "Optional flavor line."   # optional
 ```
 
-Found cards use `source: { kind: found }` and have no domain or level. They're for **extraordinary** things only (special items, artifacts, curses); mundane gear belongs in `data/mechanics/equipment.yaml`. `slots: 0` is allowed for small finds.
+HCore cards use `source: { kind: hcore }` and have no domain or level. They're for **extraordinary** things only; mundane gear belongs in `data/mechanics/equipment.yaml`. `slots: 0` is allowed.
 
 Format rules:
 - `text` is a **list with one entry per feature**, even for a single feature.
@@ -84,8 +84,12 @@ Format rules:
 
 Patterns for card text (not fields, but useful):
 - Standard activations: Passive / costs Hope / costs Stress / X uses per rest / One-shot.
-- Drawbacks, especially on found cards.
+- Drawbacks, especially on HCore cards.
 - Vault interactions: "When vaulted…", "Vaulted by…", "Can't be vaulted voluntarily."
+
+## HCore cards
+
+HCore cards are the extraordinary cards outside the domains: items, artifacts, abilities and curses. Their **guidelines** (general rules and one entry per type: what it is, power, slots, price) live at the top of `data/hcore/hcore.yaml`, next to the cards; read them before designing one. The same process applies: 5 options, recommend, the user decides.
 
 ## Guardrails
 

@@ -12,14 +12,15 @@ const DOMAIN_COLORS = {
   mind: '#9a6bdc',
   tech: '#3ba7c4',
   aid: '#4fae6a',
-  found: '#c9a13b',
+  hcore: '#c9a13b',
 };
 const FALLBACK_COLORS = ['#d07f3a', '#c24f8f', '#7c8fd6', '#8fae3b'];
 
-const FOUND = {
-  id: 'found',
-  name: 'Found',
-  covers: 'Extraordinary finds picked up during play: special items, artifacts, abilities and curses. Independent of character level; may take 0 or more slots.',
+// HCore cards: extraordinary cards outside the domains. Name and summary come from data/hcore/hcore.yaml.
+const HCORE = {
+  id: 'hcore',
+  name: 'HCore Cards',
+  covers: 'Extraordinary cards outside the domains: special items, artifacts, abilities and curses.',
 };
 
 // ---------- Fetching ----------
@@ -178,13 +179,30 @@ function loadClasses() {
   return classesPromise;
 }
 
-// Cards of one domain (data/domains/<id>.yaml) or the found cards
-// (data/found/found.yaml). Missing file → empty list.
+// The HCore file holds guidelines plus cards: { name, summary, rules, types, cards }.
+let hcorePromise;
+function loadHcore() {
+  hcorePromise ??= fetchText(`${DATA_ROOT}data/hcore/hcore.yaml`)
+    .then(text => {
+      const h = jsyaml.load(text) || {};
+      return {
+        name: h.name || HCORE.name,
+        summary: h.summary || HCORE.covers,
+        rules: asList(h.rules),
+        types: asList(h.types),
+        cards: asList(h.cards),
+      };
+    })
+    .catch(() => ({ name: HCORE.name, summary: HCORE.covers, rules: [], types: [], cards: [] }));
+  return hcorePromise;
+}
+
+// Cards of one domain (data/domains/<id>.yaml) or the HCore cards. Missing file → empty list.
 async function loadCards(id) {
-  const file = id === FOUND.id ? 'data/found/found.yaml' : `data/domains/${id}.yaml`;
+  if (id === HCORE.id) return (await loadHcore()).cards;
   let text;
   try {
-    text = await fetchText(DATA_ROOT + file);
+    text = await fetchText(`${DATA_ROOT}data/domains/${id}.yaml`);
   } catch {
     return [];
   }
@@ -321,7 +339,7 @@ async function initOverview() {
       loadBaseline(), loadDomains(), loadClasses(),
       loadRest().catch(() => null), loadEquipment().catch(() => null), loadAilments().catch(() => null),
     ]);
-    const all = [...domains, FOUND];
+    const all = [...domains, HCORE];
     const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
     const total = cardLists.reduce((n, l) => n + l.length, 0);
 
@@ -465,7 +483,7 @@ function renderCard(card, domainId) {
     </article>`;
 }
 
-// Domain cards grouped by level; found cards grouped by type.
+// Domain cards grouped by level; HCore cards grouped by type.
 function groupCards(cards) {
   const groups = new Map();
   for (const c of cards) {
@@ -478,7 +496,24 @@ function groupCards(cards) {
   return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
 }
 
-function renderDomainSection({ domain, groups, color }, classes) {
+// Guidelines shown at the top of the HCore section: general rules plus one line per card type.
+function renderHcoreGuidelines(hcore) {
+  if (!hcore || (!hcore.rules.length && !hcore.types.length)) return '';
+  return `
+    <div class="class-notes hcore-guidelines">
+      ${hcore.rules.length ? `<p class="eyebrow">Guidelines</p>
+        <ul>${hcore.rules.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>` : ''}
+      ${hcore.types.length ? `<p class="eyebrow">Types</p>
+        <ul>${hcore.types.map(t => `
+          <li><strong>${escapeHtml(t.name || '')}</strong>: ${escapeHtml(t.what || '')}
+            ${t.power ? `<br><span class="eyebrow">Power</span> ${escapeHtml(t.power)}` : ''}
+            ${t.slots ? `<br><span class="eyebrow">Slots</span> ${escapeHtml(t.slots)}` : ''}
+            ${t.price ? `<br><span class="eyebrow">Price</span> ${escapeHtml(t.price)}` : ''}
+          </li>`).join('')}</ul>` : ''}
+    </div>`;
+}
+
+function renderDomainSection({ domain, groups, color }, classes, hcore) {
   const users = classes.filter(c => c.domains.includes(domain.id));
   const count = groups.reduce((n, [, list]) => n + list.length, 0);
   const body = groups.map(([label, list]) => `
@@ -487,12 +522,13 @@ function renderDomainSection({ domain, groups, color }, classes) {
   return `
     <section class="domain-section" id="${domain.id}" style="--domain:${color}">
       <header class="domain-head">
-        <p class="eyebrow">${domain.id === FOUND.id ? 'Found cards' : 'Domain'} · ${plural(count, 'card')}</p>
+        <p class="eyebrow">${domain.id === HCORE.id ? 'Outside the domains' : 'Domain'} · ${plural(count, 'card')}</p>
         <h2>${escapeHtml(domain.name)}</h2>
         <p class="lede">${escapeHtml(domain.covers)}</p>
         ${users.length ? `<div class="domain-classes"><span class="eyebrow">Classes</span>
           ${users.map(c => `<a class="tag" href="classes.html#${c.id}">${escapeHtml(c.name)}</a>`).join('')}</div>` : ''}
       </header>
+      ${domain.id === HCORE.id ? renderHcoreGuidelines(hcore) : ''}
       ${body || '<p class="status">No cards yet.</p>'}
     </section>`;
 }
@@ -534,8 +570,8 @@ async function initDomains() {
   const sidebar = document.getElementById('sidebar');
   renderNav('domains');
   try {
-    const [domains, classes] = await Promise.all([loadDomains(), loadClasses()]);
-    const all = [...domains, FOUND];
+    const [domains, classes, hcore] = await Promise.all([loadDomains(), loadClasses(), loadHcore()]);
+    const all = [...domains, { ...HCORE, name: hcore.name, covers: hcore.summary }];
     const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
     const entries = all.map((domain, i) => ({
       domain,
@@ -557,7 +593,7 @@ async function initDomains() {
             </li>`).join('')}
         </ul>
       </section>
-      ${entries.map(e => renderDomainSection(e, classes)).join('')}
+      ${entries.map(e => renderDomainSection(e, classes, hcore)).join('')}
     `;
 
     watchSections(sidebar);

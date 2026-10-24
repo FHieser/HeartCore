@@ -1,12 +1,12 @@
 # Equipment: ordinary gear (armor, shields, weapons, consumables). Tools come from Experiences.
-# Extraordinary items (alien armor, heavy laser, artifacts, curses) are found cards in data/found/.
+# Extraordinary items (alien armor, heavy laser, artifacts, curses) are HCore cards in data/hcore/.
 # All text entries are one line each, no line breaks (same rule as cards).
 
 name: Equipment
 summary: "Ordinary modern gear. A bit weaker than Daggerheart equipment: protection and power are scarce."
 
 rules:
-  - "Ordinary vs. extraordinary: mundane gear is equipment; anything special or anomalous is a found card."
+  - "Ordinary vs. extraordinary: mundane gear is equipment; anything special or anomalous is an HCore card."
   - "Equipment never takes loadout slots and can't be vaulted. It's simply part of the character sheet."
   - "Tools come from Experiences: a character with a fitting Experience (e.g. Electrician) has the tools for it. There is no separate tool list."
 

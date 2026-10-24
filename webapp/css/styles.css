@@ -427,6 +427,8 @@ a.ring-class:hover { color: var(--text); border-color: #444; }
 .rule-box h4 { color: var(--accent); font-size: 1.15rem; font-weight: normal; letter-spacing: 0.02em; }
 
 .ailment-notes { margin-top: 4rem; }
+.hcore-guidelines { margin: 1.5rem 0 0.5rem; }
+.hcore-guidelines strong { color: var(--domain); font-weight: normal; }
 
 /* ---------- Rest page ---------- */
 

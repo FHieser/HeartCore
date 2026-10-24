@@ -1,0 +1,75 @@
+# HCore Cards: extraordinary cards outside the domains (items, artifacts, abilities, curses).
+# Guidelines and cards live together here; the webapp shows both on the Domains page.
+# Card format: see .claude/create-domain-cards.md → Card format. Use source: { kind: hcore }.
+# All text entries are one line each, no line breaks.
+
+name: HCore Cards
+summary: "Extraordinary cards outside the domains: special items, artifacts, abilities and curses. Independent of character level; may take 0 or more slots."
+
+rules:
+  - "HCore cards are extraordinary. Mundane gear is equipment, not a card."
+  - "They're independent of character level and balanced mainly through slots, limits and costs."
+  - "An HCore card should be stronger than a domain card of similar slot cost, but carry a price a domain card wouldn't."
+  - "Most are handed out by the GM during play; abilities can also come from a character's background."
+
+types:
+  - name: item
+    what: "Extraordinary physical gear: prototypes, alien tech."
+    power: "Can exceed ordinary equipment; weapon damage may use Tier 4 benchmarks."
+    slots: "1–2 slots, Recall 1–2"
+    price: "A hard limit (overheats, charges, once per scene) or simply hard to get. It must be protected: it can be stolen, broken or lost, and others want it."
+  - name: artifact
+    what: "An anomalous object, usable again and again."
+    power: "Bends the rules: sees the unseen, opens anything, knows the future."
+    slots: "0–1 slots, Recall 2–3"
+    price: "Works against you: reveals you, draws threats, costs Stress, feeds the GM Fear. May be hard to get rid of."
+  - name: ability
+    what: "Something the character can do that others can't. Comes from the character's background or is acquired during play (e.g. after contact with an anomaly)."
+    power: "Lets you do something no one else can, rather than improving something you already do (e.g. speak mind to mind)."
+    slots: "0–1 slots, Recall 1–2"
+    price: "Using it always costs something (Stress, Hope or a limit per scene). It marks the character as strange to NPCs."
+  - name: curse
+    what: "Something that latched onto the character."
+    power: "Optional, tempting upside (e.g. +1 HP)."
+    slots: "0–1 slots, Recall 0"
+    price: "Can't be swapped out or vaulted. A recurring, noticeable drawback, e.g. once per session."
+
+cards:
+  - name: Heavy Laser
+    type: item
+    source: { kind: hcore }
+    slots: 2
+    recall: 2
+    text:
+      - "A weapon: Finesse, Very Far, 2d12+12 damage, two-handed. It cuts through walls and doors."
+      - "After each shot it overheats and can't be used again until the end of the scene."
+
+  - name: The Lantern
+    type: artifact
+    source: { kind: hcore }
+    slots: 1
+    recall: 2
+    text:
+      - "The lantern always burns; it can't be put out. While you hold it, the world turns grey and distant, and you see invisible creatures, hidden anomalies and things that shouldn't be there."
+      - "Everything you see this way can see you too, and it's drawn to you."
+      - "While you hold the lantern, anyone you touch sees what you see."
+      - "If you touch an invisible entity with the lantern, it's imprisoned inside the lantern."
+
+  - name: Telepathy
+    type: ability
+    source: { kind: hcore }
+    slots: 1
+    recall: 2
+    text:
+      - "Mark 1 Stress to speak mind to mind with a person you can see or an ally within Very Far range. They can answer the same way."
+      - "Once per scene, listen to the surface thoughts of a creature within Close range: ask the GM what it wants right now. If it's an anomaly, it notices you, and you mark 1 Stress."
+
+  - name: Hunger
+    type: curse
+    source: { kind: hcore }
+    slots: 1
+    recall: 0
+    text:
+      - "This card can't be swapped out or vaulted."
+      - "Your HP maximum increases by 1."
+      - "Once per session, you have to eat something that shouldn't be eaten, or mark 2 Stress."
