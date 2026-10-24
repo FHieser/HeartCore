@@ -2,7 +2,7 @@
 
 *A Daggerheart horror variant.*
 
-A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / modern sci-fi space. Characters can be trained professionals (containment staff, security, researchers) **or** ordinary people thrown into anomalous situations. Both use the same classes; only background and starting gear differ.
+A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / modern sci-fi space. Characters can be trained professionals (containment staff, security, researchers) **or** ordinary people thrown into anomalous situations. Both use the same classes; only their Experiences and starting gear differ.
 
 > Status: early design draft. Items marked **(open)** are undecided.
 >
@@ -27,6 +27,15 @@ A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / 
 - **Stress**
 - **Hope**
 - **Armor** (Armor Slots)
+- **Experiences**
+
+### Experiences
+
+- Start with **2 Experiences at +2**. Spend 1 Hope to add an Experience's bonus to a roll it fits (as in Daggerheart).
+- Recommendation: one **job Experience** (what you do for a living, e.g. *Nurse*, *Security Guard*) and one **personal Experience** (hobby, past, quirk, e.g. *Amateur Boxer*, *Grew Up on a Farm*).
+- Experiences also explain your **tools**: an *Electrician* has wire strippers and a multimeter on them. This is narrative permission, not a separate mechanic.
+- **Professional or civilian** shows only through your job Experience; there are no extra background rules.
+- **Growth** as in Daggerheart: a new Experience at +2 at level 2; the advancement "+1 to two Experiences" stays available.
 
 ### Ideas under consideration (not decided)
 
@@ -66,8 +75,9 @@ Design notes:
 - Characters go from **level 1 to 4**.
 - Start with **2 domain cards**; gain **1 domain card automatically** on each level-up (max 5 from levelling). The card's level must be equal to or lower than the character's level.
 - **2 advancements** per level-up. Daggerheart's "take an additional domain card" advancement is removed.
+- **Proficiency stays at 1.** Daggerheart's Proficiency increase at level 2 and the Proficiency advancement are removed; damage only grows through better weapons.
 - **Loadout** of 5 slots; the rest go to the **vault**. A vaulted card can be recalled mid-scene by marking Stress equal to its Recall Cost, or for free during a rest.
-- **Ordinary vs. extraordinary:** mundane gear (armor, weapons, consumables, tools) is equipment (`data/mechanics/equipment.yaml`) and never takes loadout slots. Anything special or anomalous is a found card.
+- **Ordinary vs. extraordinary:** mundane gear (armor, shields, weapons, consumables) is equipment (`data/mechanics/equipment.yaml`) and never takes loadout slots. Anything special or anomalous is a found card.
 - **Found cards:** extraordinary things gained during play (special items like alien armor or a heavy laser, artifacts, abilities, curses, …). They can take **0 slots** for small finds. They are **independent of character level**, go into the loadout like any other card, and may take **more than one slot**. The GM balances powerful finds through slot size. How long a found card lasts depends on the card. If the loadout is full, something has to be packed into the vault: you can only handle so much.
 
 Open:
@@ -79,10 +89,7 @@ Open:
 
 ## Open Topics
 
-1. **Scrap access:** who can gather and spend Scrap. Options discussed:
-   - Shared party pool (Mechanic gathers, anyone with Tech cards spends)
-   - Anyone gathers, Mechanic gathers better
-   - Tech cards cost "Scrap *or* Hope"
-   - Scrap is Mechanic-only; Tech cards don't use it
-   - Scrap as narrative items instead of a number
-2. **Domain cards:** level 1 is done for all four domains; levels 2–4 and their power curve are still open.
+1. **Domain cards:** level 1 is done for all four domains; levels 2–4 and their power curve are still open.
+2. **Starting gear:** what a new character starts with (armor, weapon, consumables), given that professional vs. civilian has no extra rules.
+3. **Adversaries and anomalies:** none designed yet; weapons and armor follow the Daggerheart benchmarks.
+4. **Death moves:** keep Daggerheart's Blaze of Glory / Avoid Death / Risk It All, or HeartCore versions?
