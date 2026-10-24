@@ -58,6 +58,7 @@ function newCharacter() {
     name: 'New character',
     classId: '',
     level: 1,
+    tier: 1, // adventure tier: limits which equipment can be chosen
     traits: Object.fromEntries(TRAITS.map(t => [t, null])),
     traitBonus: {},
     experiences: [{ name: '', value: 2 }, { name: '', value: 2 }],
@@ -104,6 +105,8 @@ async function loadCharacterData() {
 const cardKey = card => `${card.owner}:${card.name}`;
 const findCard = key => charState.data.cards.find(c => cardKey(c) === key);
 const equipList = id => charState.data.equipment.sections.find(s => s.id === id)?.items || [];
+// Equipment the character can choose at their adventure tier; the current pick stays visible.
+const equipChoices = (id, c, current) => equipList(id).filter(x => (x.tier ?? 1) <= (c.tier || 1) || x.name === current);
 const findClass = id => charState.data.classes.find(c => c.id === id);
 const domainName = id => charState.data.domains.find(d => d.id === id)?.name || (id === HCORE.id ? 'HCore' : id);
 
@@ -149,6 +152,25 @@ function derive(c) {
     expectedDomainCards: 1 + c.level,
     traitValue: t => (c.traits[t] ?? 0) + (c.traitBonus[t] || 0),
   };
+}
+
+const TRAIT_DESCRIPTIONS = {
+  Agility: 'Move fast: run, jump, climb, dodge.',
+  Strength: 'Raw power: lift, push, break, hold on.',
+  Finesse: 'Precise hands: pick locks, repair, aim carefully, work quietly.',
+  Instinct: 'Gut feeling: notice danger, sense what\'s off, react in time.',
+  Presence: 'Other people: persuade, calm, intimidate, lead.',
+  Knowledge: 'The mind: remember, analyze, research, figure it out.',
+};
+
+// Values of the trait array that haven't been assigned yet (duplicates kept).
+function remainingTraitValues(c) {
+  const remaining = [...TRAIT_ARRAY];
+  for (const t of TRAITS) {
+    const i = remaining.indexOf(c.traits[t]);
+    if (c.traits[t] != null && i >= 0) remaining.splice(i, 1);
+  }
+  return remaining;
 }
 
 function traitArrayProblem(c) {
@@ -249,22 +271,35 @@ function renderCore(c, d) {
     </div>`;
 }
 
-function renderTraits(c, d) {
+// Trait tiles. editable: the creation wizard's value pool (pick a value, then a trait;
+// click an assigned trait to send its value back to the pool). Otherwise read-only.
+function renderTraits(c, d, { editable = false } = {}) {
   const problem = traitArrayProblem(c);
+  const pick = charState.wizard?.traitPick;
+  const remaining = remainingTraitValues(c);
+  const tile = t => {
+    const assigned = c.traits[t] != null;
+    const inner = `
+      <span class="trait-name">${t}</span>
+      <span class="trait-big">${assigned ? signed(d.traitValue(t)) : '?'}</span>
+      <span class="trait-desc">${escapeHtml(TRAIT_DESCRIPTIONS[t])}</span>
+      ${c.traitBonus[t] ? '<span class="eyebrow">+1 from advancement (marked)</span>' : ''}`;
+    return editable
+      ? `<button class="trait-tile${assigned ? ' assigned' : ''}${!assigned && pick != null ? ' droppable' : ''}" data-act="wz-trait-slot" data-trait="${t}"
+           title="${assigned ? 'Click to return this value to the pool' : 'Pick a value above, then click here'}">${inner}</button>`
+      : `<div class="trait-tile${assigned ? ' assigned' : ''}">${inner}</div>`;
+  };
   return `
     <div class="panel">
       <h3>Traits</h3>
-      <div class="trait-grid">
-        ${TRAITS.map(t => `
-          <label class="trait">
-            <span class="eyebrow">${t}${c.traitBonus[t] ? ' · +1 (marked)' : ''}</span>
-            <span class="trait-value">${c.traits[t] == null ? '–' : signed(d.traitValue(t))}</span>
-            <select class="field no-print" data-field="traits.${t}" data-num>
-              ${opt('', '–', c.traits[t] == null)}
-              ${[2, 1, 0, -1].map(v => opt(v, signed(v), c.traits[t] === v)).join('')}
-            </select>
-          </label>`).join('')}
-      </div>
+      ${editable ? `
+        <div class="trait-pool">
+          <span class="eyebrow">${remaining.length ? 'Pick a value, then click a trait' : 'All values assigned'}</span>
+          <div class="trait-chips">
+            ${remaining.map((v, i) => `<button class="trait-chip${pick === i ? ' selected' : ''}" data-act="wz-trait-chip" data-idx="${i}">${signed(v)}</button>`).join('')}
+          </div>
+        </div>` : ''}
+      <div class="trait-grid">${TRAITS.map(tile).join('')}</div>
       ${problem ? `<p class="warn">${problem}</p>` : ''}
     </div>`;
 }
@@ -345,7 +380,7 @@ function renderCards(c, d) {
     </div>`;
 }
 
-function renderWeapon(w, i) {
+function renderWeapon(c, w, i) {
   const cat = equipList('weapons').find(x => x.name === w.category);
   const featureCount = cat?.name === 'Blade' ? 2 : 1;
   const features = asList(cat?.features);
@@ -358,7 +393,7 @@ function renderWeapon(w, i) {
         <button class="btn no-print" data-act="weapon-remove" data-i="${i}">Remove</button>
       </div>
       <select class="field no-print" data-field="weapons.${i}.category">
-        ${equipList('weapons').map(x => opt(x.name, `${x.name} (Tier ${x.tier})`, x.name === w.category)).join('')}
+        ${equipChoices('weapons', c, w.category).map(x => opt(x.name, `${x.name} (Tier ${x.tier}, rarity ${x.rarity})`, x.name === w.category)).join('')}
       </select>
       ${stats ? `<p class="eyebrow">${escapeHtml(w.category)} · ${escapeHtml(stats)}</p>` : ''}
       ${cat?.built_in ? `<p class="requires">${escapeHtml(cat.built_in)}</p>` : ''}
@@ -377,15 +412,22 @@ function renderWeapon(w, i) {
 }
 
 function renderEquipment(c, d) {
-  const shields = equipList('shields');
+  const shields = equipChoices('shields', c, c.shield.name);
   const shieldFeatures = asList(d.shield?.features);
   return `
     <div class="panel wide">
       <h3>Equipment</h3>
       <div class="field-row">
+        <span class="eyebrow">Adventure tier</span>
+        <select class="field" data-field="tier" data-num>
+          ${[1, 2, 3, 4].map(t => opt(t, `Tier ${t}${t === 4 ? ' (artifacts)' : ''}`, (c.tier || 1) === t)).join('')}
+        </select>
+      </div>
+      <p class="eyebrow">Only equipment of this tier or lower is offered. Your GM sets the tier.</p>
+      <div class="field-row">
         <span class="eyebrow">Armor</span>
         <select class="field" data-field="armor">
-          ${equipList('armor').map(a => opt(a.name, `${a.name} (${a.thresholds?.join('/')}, Score ${a.score}${a.effect ? `, ${a.effect}` : ''})`, a.name === c.armor)).join('')}
+          ${equipChoices('armor', c, c.armor).map(a => opt(a.name, `${a.name} (${a.thresholds?.join('/')}, Score ${a.score}${a.effect ? `, ${a.effect}` : ''})`, a.name === c.armor)).join('')}
         </select>
       </div>
       <div class="field-row">
@@ -407,7 +449,7 @@ function renderEquipment(c, d) {
         ${c.shield.broken ? '<p class="warn">Shield broken: its Armor Score no longer counts.</p>' : ''}` : ''}
 
       <h3>Weapons</h3>
-      <div class="mini-cards">${c.weapons.map(renderWeapon).join('') || '<p class="status">No weapons.</p>'}</div>
+      <div class="mini-cards">${c.weapons.map((w, i) => renderWeapon(c, w, i)).join('') || '<p class="status">No weapons.</p>'}</div>
       <div class="no-print"><button class="btn" data-act="weapon-add">Add weapon</button></div>
 
       <h3>Consumables <span class="eyebrow">single use</span></h3>
@@ -421,7 +463,7 @@ function renderEquipment(c, d) {
       <div class="add-row no-print">
         <select class="field" data-pick="consumable">
           ${opt('', 'Add a consumable…', true)}
-          ${equipList('consumables').map(x => opt(x.name, `${x.name} (Tier ${x.tier}, rarity ${x.rarity})`, false)).join('')}
+          ${equipChoices('consumables', c).map(x => opt(x.name, `${x.name} (Tier ${x.tier}, rarity ${x.rarity})`, false)).join('')}
         </select>
         <button class="btn" data-act="consumable-add">Add</button>
       </div>
@@ -581,15 +623,9 @@ const CREATE_STEPS = [
   {
     title: 'Traits',
     render(c) {
-      const remaining = [...TRAIT_ARRAY];
-      for (const t of TRAITS) {
-        const i = remaining.indexOf(c.traits[t]);
-        if (c.traits[t] != null && i >= 0) remaining.splice(i, 1);
-      }
       return `
-        <p class="lede">Assign the values +2, +1, +1, +0, +0 and −1 to your six traits.</p>
-        <p class="eyebrow">Still to assign: ${remaining.length ? remaining.map(signed).join(', ') : 'nothing'}</p>
-        ${renderTraits(c, derive(c))}`;
+        <p class="lede">Assign the values +2, +1, +1, +0, +0 and −1 to your six traits. Your strongest trait is what your character does best under pressure.</p>
+        ${renderTraits(c, derive(c), { editable: true })}`;
     },
     problems: c => {
       const p = traitArrayProblem(c);
@@ -623,7 +659,7 @@ const CREATE_STEPS = [
     title: 'Equipment',
     render(c) {
       return `
-        <p class="lede">Your GM decides your starting gear based on the adventure's tier. Pick what they allow; you can change it later on the sheet.</p>
+        <p class="lede">Your GM tells you the adventure's tier and decides what you start with. Set the tier first; only equipment of that tier or lower is offered. You can change it later on the sheet.</p>
         ${renderEquipment(c, derive(c))}`;
     },
     problems: () => [],
@@ -782,7 +818,7 @@ function renderWizard() {
 }
 
 function startCreateWizard() {
-  charState.wizard = { type: 'create', step: 0, draft: newCharacter(), showProblems: false };
+  charState.wizard = { type: 'create', step: 0, draft: newCharacter(), showProblems: false, traitPick: null };
   charState.exportCode = null;
 }
 
@@ -834,6 +870,21 @@ function handleWizardClick(act, btn) {
       const i = c.cards.findIndex(e => e.key === key);
       if (i >= 0) c.cards.splice(i, 1);
       else if (c.cards.length < 2) c.cards.push({ key, vaulted: false });
+      break;
+    }
+    case 'wz-trait-chip': {
+      const idx = Number(btn.dataset.idx);
+      wz.traitPick = wz.traitPick === idx ? null : idx;
+      break;
+    }
+    case 'wz-trait-slot': {
+      const t = btn.dataset.trait;
+      if (c.traits[t] != null) {
+        c.traits[t] = null;
+      } else if (wz.traitPick != null) {
+        c.traits[t] = remainingTraitValues(c)[wz.traitPick];
+        wz.traitPick = null;
+      }
       break;
     }
     case 'wz-lu-card':
@@ -1028,7 +1079,7 @@ function handleClick(e) {
       c.cards.splice(i, 1);
       break;
     case 'weapon-add':
-      c.weapons.push({ category: equipList('weapons')[0]?.name || '', name: '', features: [], utility: '' });
+      c.weapons.push({ category: equipChoices('weapons', c)[0]?.name || '', name: '', features: [], utility: '' });
       break;
     case 'weapon-remove':
       c.weapons.splice(i, 1);

@@ -18,24 +18,36 @@ armor:
   # thresholds: [major, severe] base values (level is added)
   list:
     - name: Street clothes
+      tier: 1
+      rarity: 0
       thresholds: [3, 8]
       score: 0
       effect: "+2 Evasion"
     - name: Work jacket
+      tier: 1
+      rarity: 0
       thresholds: [4, 9]
       score: 1
       effect: "+1 Evasion"
     - name: Motorcycle leathers
+      tier: 1
+      rarity: 1
       thresholds: [5, 11]
       score: 2
     - name: Stab vest
+      tier: 2
+      rarity: 2
       thresholds: [5, 12]
       score: 3
     - name: Ballistic vest
+      tier: 2
+      rarity: 2
       thresholds: [6, 14]
       score: 3
       effect: "−1 Evasion"
     - name: Riot gear
+      tier: 3
+      rarity: 3
       thresholds: [7, 16]
       score: 3
       effect: "−2 Evasion, −1 Agility"
