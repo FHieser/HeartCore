@@ -237,25 +237,58 @@ function renderHeader(c, d) {
     </section>`;
 }
 
+// Active ailments of one table (physical or stress), with an add picker for that table.
+function renderAilmentList(c, tableId) {
+  const table = charState.data.ailments.tables.find(t => t.id === tableId);
+  if (!table) return '';
+  const active = c.ailments.map((a, i) => ({ a, i })).filter(x => x.a.table === tableId);
+  return `
+    <div class="ailment-block" style="--domain:${table.color}">
+      <span class="eyebrow">${escapeHtml(table.name)}</span>
+      <ul class="plain-list">
+        ${active.map(({ a, i }) => {
+          const entry = table.entries.find(e => e.name === a.name);
+          return `<li><strong class="ailment-name">${escapeHtml(a.name)}</strong>
+            ${entry ? `<span class="tag">${escapeHtml(LASTS_LABELS[entry.lasts] || entry.lasts || '')}</span> <span class="muted">${highlightRules(escapeHtml(entry.text.join(' ')))}</span>` : ''}
+            <button class="btn no-print" data-act="ailment-remove" data-i="${i}">Remove</button></li>`;
+        }).join('') || '<li class="muted">None.</li>'}
+      </ul>
+      <div class="add-row no-print">
+        <select class="field" data-pick="ailment-${tableId}">
+          ${opt('', `Add (${table.trigger.replace(/\.$/, '').toLowerCase()})…`, true)}
+          ${table.entries.map(e => opt(e.name, `${e.roll}. ${e.name}`, false)).join('')}
+        </select>
+        <button class="btn" data-act="ailment-add" data-table="${tableId}">Add</button>
+      </div>
+    </div>`;
+}
+
 function renderCore(c, d) {
   return `
-    <div class="sheet-grid">
-      <div class="panel">
-        <h3>Defense</h3>
+    <div class="sheet-grid core-grid">
+      <div class="panel body-panel">
+        <h3>Body</h3>
         <div class="class-stats">
           <span class="stat"><span class="stat-value">${d.evasion}</span><span class="eyebrow">Evasion</span></span>
           <span class="stat"><span class="stat-value">${d.armorScore}</span><span class="eyebrow">Armor Score</span></span>
         </div>
-        <p class="thresholds"><span class="eyebrow">Damage</span> Minor &lt; ${d.major} ≤ Major &lt; ${d.severe} ≤ Severe</p>
+        <div class="severity">
+          <span class="sev"><span class="eyebrow">Minor · 1 HP</span><span class="sev-range">1–${d.major - 1}</span></span>
+          <span class="sev"><span class="eyebrow">Major · 2 HP</span><span class="sev-range">${d.major}–${d.severe - 1}</span></span>
+          <span class="sev severe"><span class="eyebrow">Severe · 3 HP + ailment</span><span class="sev-range">${d.severe}+</span></span>
+        </div>
         <span class="eyebrow">Armor Slots</span>
         ${track('armor', d.armorScore, Math.min(c.marked.armor, d.armorScore))}
-      </div>
-      <div class="panel">
-        <h3>Hit Points <span class="eyebrow">${c.marked.hp} / ${d.hpMax} marked</span></h3>
+        <span class="eyebrow">Hit Points · ${c.marked.hp} / ${d.hpMax} marked</span>
         ${track('hp', d.hpMax, c.marked.hp)}
-        <h3>Stress <span class="eyebrow">${c.marked.stress} / ${d.stressMax} marked</span></h3>
+        ${renderAilmentList(c, 'physical')}
+      </div>
+      <div class="panel mind-panel">
+        <h3>Mind</h3>
+        <span class="eyebrow">Stress · ${c.marked.stress} / ${d.stressMax} marked</span>
         ${track('stress', d.stressMax, c.marked.stress)}
         ${d.stressMax && c.marked.stress >= d.stressMax ? '<p class="warn">Stress maxed: roll on the Stress ailment table.</p>' : ''}
+        ${renderAilmentList(c, 'stress')}
       </div>
       <div class="panel">
         <h3>Hope <span class="eyebrow">${c.hope} / ${d.hopeMax}</span></h3>
@@ -466,30 +499,6 @@ function renderEquipment(c, d) {
           ${equipChoices('consumables', c).map(x => opt(x.name, `${x.name} (Tier ${x.tier}, rarity ${x.rarity})`, false)).join('')}
         </select>
         <button class="btn" data-act="consumable-add">Add</button>
-      </div>
-    </div>`;
-}
-
-function renderAilments(c) {
-  const tables = charState.data.ailments.tables;
-  return `
-    <div class="panel wide">
-      <h3>Ailments</h3>
-      <ul class="plain-list">
-        ${c.ailments.map((a, i) => {
-          const table = tables.find(t => t.id === a.table);
-          const entry = table?.entries.find(e => e.name === a.name);
-          return `<li style="--domain:${table?.color || 'var(--accent)'}"><strong class="ailment-name">${escapeHtml(a.name)}</strong>
-            ${entry ? `<span class="tag">${escapeHtml(LASTS_LABELS[entry.lasts] || entry.lasts || '')}</span> <span class="muted">${highlightRules(escapeHtml(entry.text.join(' ')))}</span>` : ''}
-            <button class="btn no-print" data-act="ailment-remove" data-i="${i}">Remove</button></li>`;
-        }).join('') || '<li class="status">None.</li>'}
-      </ul>
-      <div class="add-row no-print">
-        <select class="field" data-pick="ailment">
-          ${opt('', 'Add an ailment…', true)}
-          ${tables.map(t => `<optgroup label="${escapeHtml(t.name)}">${t.entries.map(e => opt(`${t.id}:${e.name}`, `${e.roll}. ${e.name}`, false)).join('')}</optgroup>`).join('')}
-        </select>
-        <button class="btn" data-act="ailment-add">Add</button>
       </div>
     </div>`;
 }
@@ -721,30 +730,40 @@ function levelSteps(c) {
       },
       problems: lu => cardProblems(c, lu),
     },
-    ...[0, 1].map(k => ({
-      title: `Advancement ${k + 1}`,
+    {
+      title: 'Advancements',
       render(lu) {
-        const a = lu.adv[k];
         const traitOpts = sel => TRAITS.map(t => opt(t, `${t}${c.traitBonus[t] ? ' (marked)' : ''}`, t === sel)).join('');
         const expOpts = sel => c.experiences.map((e, i) => opt(i, e.name || `Experience ${i + 1}`, String(i) === String(sel))).join('');
+        const column = k => {
+          const a = lu.adv[k];
+          return `
+            <div class="adv-column">
+              <h3>Advancement ${k + 1}</h3>
+              <div class="pick-list">
+                ${ADVANCEMENTS.map(adv => {
+                  // Uses so far plus the other advancement of this level-up, if it picked the same option.
+                  const other = lu.adv.filter((x, j) => j !== k && x.id === adv.id).length;
+                  const left = adv.max - advancementUses(c, adv.id) - other;
+                  const selected = a.id === adv.id;
+                  return `<button class="pick-row${selected ? ' selected' : ''}" data-act="wz-adv" data-k="${k}" data-id="${adv.id}" ${left <= 0 && !selected ? 'disabled' : ''}>
+                    <span>${escapeHtml(adv.label)}</span><span class="eyebrow">${Math.max(0, left)} left</span></button>`;
+                }).join('')}
+              </div>
+              ${a.id === 'traits' ? `<div class="pair">
+                <select class="field" data-lu="adv.${k}.a">${opt('', 'Trait…', !a.a)}${traitOpts(a.a)}</select>
+                <select class="field" data-lu="adv.${k}.b">${opt('', 'Trait…', !a.b)}${traitOpts(a.b)}</select></div>` : ''}
+              ${a.id === 'experiences' ? `<div class="pair">
+                <select class="field" data-lu="adv.${k}.a">${opt('', 'Experience…', a.a === '')}${expOpts(a.a)}</select>
+                <select class="field" data-lu="adv.${k}.b">${opt('', 'Experience…', a.b === '')}${expOpts(a.b)}</select></div>` : ''}
+            </div>`;
+        };
         return `
-          <div class="pick-list">
-            ${ADVANCEMENTS.map(adv => {
-              const used = advancementUses(c, adv.id) + lu.adv.slice(0, k).filter(x => x.id === adv.id).length;
-              const left = adv.max - used;
-              return `<button class="pick-row${a.id === adv.id ? ' selected' : ''}" data-act="wz-adv" data-k="${k}" data-id="${adv.id}" ${left <= 0 ? 'disabled' : ''}>
-                <span>${escapeHtml(adv.label)}</span><span class="eyebrow">${left} left</span></button>`;
-            }).join('')}
-          </div>
-          ${a.id === 'traits' ? `<div class="pair">
-            <select class="field" data-lu="adv.${k}.a">${opt('', 'Trait…', !a.a)}${traitOpts(a.a)}</select>
-            <select class="field" data-lu="adv.${k}.b">${opt('', 'Trait…', !a.b)}${traitOpts(a.b)}</select></div>` : ''}
-          ${a.id === 'experiences' ? `<div class="pair">
-            <select class="field" data-lu="adv.${k}.a">${opt('', 'Experience…', a.a === '')}${expOpts(a.a)}</select>
-            <select class="field" data-lu="adv.${k}.b">${opt('', 'Experience…', a.b === '')}${expOpts(a.b)}</select></div>` : ''}`;
+          <p class="lede">Choose two advancements. You can take the same one twice if it has uses left.</p>
+          <div class="adv-columns">${column(0)}${column(1)}</div>`;
       },
-      problems: lu => advProblems(c, lu, k),
-    })),
+      problems: lu => [...advProblems(c, lu, 0), ...advProblems(c, lu, 1)],
+    },
   ];
   if (c.level + 1 === 2) {
     steps.push({
@@ -962,7 +981,6 @@ function renderSheet() {
     <div class="sheet-grid">${renderClassFeatures(c, d)}</div>
     ${renderCards(c, d)}
     ${renderEquipment(c, d)}
-    ${renderAilments(c)}
     ${renderNotes(c)}`;
 }
 
@@ -1094,10 +1112,10 @@ function handleClick(e) {
       c.consumables.splice(i, 1);
       break;
     case 'ailment-add': {
-      const value = document.querySelector('[data-pick="ailment"]')?.value;
-      if (!value) return;
-      const [table, ...rest] = value.split(':');
-      c.ailments.push({ table, name: rest.join(':') });
+      const table = btn.dataset.table;
+      const name = document.querySelector(`[data-pick="ailment-${table}"]`)?.value;
+      if (!name) return;
+      c.ailments.push({ table, name });
       break;
     }
     case 'ailment-remove':

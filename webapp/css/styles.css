@@ -683,3 +683,17 @@ button.trait-tile:hover { border-color: #555; }
 .pick-row.selected { border-color: var(--accent); color: var(--accent); }
 .pick-row:disabled { opacity: 0.35; cursor: default; }
 .review .eyebrow { display: inline-block; min-width: 8rem; }
+.adv-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 1rem; }
+.adv-column { display: grid; gap: 0.6rem; align-content: start; }
+.adv-column h3 { font-size: 0.95rem; font-weight: normal; letter-spacing: 0.06em; }
+
+/* Sheet: Body (severity, armor, HP, physical ailments) and Mind (Stress, Stress ailments). */
+.core-grid { grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); }
+.severity { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.sev { display: grid; gap: 0.2rem; border: 1px solid var(--line); padding: 0.45rem 0.55rem; background: #0b0b0b; }
+.sev-range { font-family: var(--mono); font-size: 1.15rem; color: var(--text); }
+.sev.severe { border-color: var(--accent-dim); }
+.sev.severe .sev-range { color: var(--accent); }
+.ailment-block { display: grid; gap: 0.45rem; border-top: 1px solid var(--line); padding-top: 0.6rem; margin-top: 0.2rem; }
+.ailment-block > .eyebrow { color: var(--domain); }
+@media print { .characters-page .sev { background: #fff; } .characters-page .sev-range, .characters-page .ailment-block > .eyebrow { color: #000; } }
