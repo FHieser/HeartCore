@@ -306,7 +306,7 @@ function domainColor(id, index = 0) {
 function renderNav(current) {
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
-  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['rest', 'rest.html', 'Rest'], ['equipment', 'equipment.html', 'Equipment'], ['ailments', 'ailments.html', 'Ailments']]
+  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['rest', 'rest.html', 'Rest'], ['equipment', 'equipment.html', 'Equipment'], ['ailments', 'ailments.html', 'Ailments'], ['characters', 'characters.html', 'Characters']]
     .map(([id, href, label]) => `<a href="${href}" class="${id === current ? 'current' : ''}">${label}</a>`)
     .join('');
 }
@@ -403,6 +403,13 @@ async function initOverview() {
           <span class="eyebrow">${plural(ailments.tables.reduce((n, t) => n + t.entries.length, 0), 'ailment')}</span>
         </a>` : ''}
       ${rest || equipment || ailments ? '' : '<p class="status">No mechanics yet.</p>'}
+
+      <h2>Play</h2>
+      <a class="link-field" href="characters.html">
+        <span class="link-field-title">Character creator →</span>
+        <span class="link-field-domains"><span style="--domain:#9a9a9a">Create, track, level up, export</span></span>
+        <span class="eyebrow">saved in your browser</span>
+      </a>
     `;
   } catch (err) {
     showError(root, err);
