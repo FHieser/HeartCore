@@ -10,20 +10,30 @@ features:
   main:
     name: MacGyver
     text:
-      - "Collect Scrap on rolls with Hope. Scrap refills on a short rest. Spend Scrap to build things."
+      - "You can hold up to 5 Scrap. Spend some time scavenging an area that hasn't been picked over (or has enough material and time): gain 1d3 Scrap, or fill up to 5 if the GM allows it. Allies can scavenge too and hand you the Scrap; only you can build with it."
+      - "In a calm moment (no immediate threat), spend Scrap to build one of the builds below. A build stays in place until it's triggered or used; then it's gone."
+    options:
+      - name: "Boom Box (1 Scrap)"
+        text: "A noisemaker with a timer or a trigger. When it goes off, adversaries that notice it have to investigate it."
+      - name: "The DistracTOR (1 Scrap)"
+        text: "A launcher with one shot. Launch something small (hand-sized at most) to a point within Far range. It lands exactly there, with no roll."
+      - name: "Ring-a-Ding (2 Scrap)"
+        text: "Secure a doorway or a hallway. When something passes it, you know, and the group can't be surprised from that direction."
+      - name: "Ankle Biter (2 Scrap)"
+        text: "Rig a spot. The first creature that passes it is temporarily restrained or marks 1 HP; you choose when you build it."
+      - name: "Hold-The-Door-O-Matic (3 Scrap)"
+        text: "Block a door, hatch or passage. Nothing gets through until something breaks it by force; the GM has to spend Fear to do so."
+      - name: "Masterpiece (GM sets the cost)"
+        text: "Describe a complex mechanism and what it should do. The GM sets the cost (usually 3–5) and how it works."
   flair:
-    # name: (open)
+    name: Wire Whisperer
     text:
       - "Advantage on rolls to understand, follow or navigate tech and infrastructure (vents, fuse boxes, maintenance tunnels, wiring)."
   hope:
     name: Not Pretty, But It'll Do
     cost: 3
     text:
-      - "Create a Scrap build on the spot without spending Scrap. It breaks immediately after one use."
+      - "Create a build (not a Masterpiece) on the spot without spending Scrap, even without a calm moment. It breaks immediately after one use."
 
-loop: "Rolls with Hope give Scrap, Scrap builds things; the Hope feature builds for free, but only once."
-open:
-  - "Max Scrap; does a short rest refill to a set amount or to max?"
-  - "What can be built, and at what Scrap cost?"
-  - "Can other characters (e.g. the Scientist with Tech cards) use Scrap?"
-  - "Name for the Flair."
+loop: "Builds normally need Scrap and a calm moment, so the Mechanic prepares ahead; when things go wrong mid-fight, the Hope feature is the only way to build on the spot."
+open: []
