@@ -23,5 +23,4 @@ features:
       - "Gain advantage on Finesse, Instinct and Knowledge rolls until the end of the scene."
 
 loop: "Switching priority in Code Red costs an ally Stress but gives Hope, which fuels Unparalleled Concentration."
-open:
-  - "Unparalleled Concentration shares Instinct with the Soldier's Adrenaline. Possible swap to Presence if they should be fully distinct."
+open: []

@@ -27,10 +27,9 @@ treatment:
 notes:
   - "Stress ailments trigger at maxed Stress, so any further Stress becomes HP. Avoid Stress costs in Stress ailments unless HP damage is intended."
   - "Design rule: ailments need an immediate, noticeable effect and no bookkeeping, and must plausibly be fixed by what ends them (a breather, a night's sleep, treatment)."
+  - "Scars aren't on the tables: Avoid Death already leaves one (a lost Hope slot, see Baseline.md → Death moves)."
 
-open:
-  - "Scars (practically permanent injuries, e.g. from Avoid Death) are dropped for now; may come back later."
-  - "Relation to the vault: do ailments replace the injury and panic vault triggers (see Baseline.md → Cards)?"
+open: []
 
 physical:
   name: Physical ailments
@@ -50,7 +49,7 @@ physical:
       name: Disarmed
       lasts: scene
       text:
-        - "You drop what you're holding; one Item card goes to the vault until the end of the scene. If you aren't holding anything, mark 1 Stress instead."
+        - "You drop what you're holding. If it's an Item card, it goes to the vault until the end of the scene; ordinary gear lies on the floor. If you aren't holding anything, mark 1 Stress instead."
     - roll: 4
       name: Ringing Ears
       lasts: scene
