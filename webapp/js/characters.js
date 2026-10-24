@@ -22,7 +22,8 @@ const ADVANCEMENTS = [
   { id: 'evasion', label: '+1 Evasion', max: 1 },
 ];
 
-const charState = { data: null, chars: [], currentId: null, levelUp: null, exportCode: null, notice: '' };
+// wizard: null | { type: 'create', step, draft } | { type: 'level', step } (level-up choices live in levelUp).
+const charState = { data: null, chars: [], currentId: null, levelUp: null, wizard: null, exportCode: null, notice: '' };
 
 // ---------- Storage ----------
 
@@ -45,7 +46,11 @@ function writeChars() {
   }
 }
 
-const currentChar = () => charState.chars.find(c => c.id === charState.currentId) || null;
+// During the creation wizard, the draft is the "current" character, so the shared
+// sheet renderers and field handlers work on it before it's saved.
+const currentChar = () => (charState.wizard?.type === 'create'
+  ? charState.wizard.draft
+  : charState.chars.find(c => c.id === charState.currentId) || null);
 
 function newCharacter() {
   return {
@@ -463,80 +468,42 @@ function advancementUses(c, id) {
   return c.advancements.filter(a => a.id === id).length;
 }
 
-function levelUpProblems(c, lu) {
-  const problems = [];
-  const newLevel = c.level + 1;
-  const d = derive(c);
-  const cardOptions = levelUpCardOptions(c, newLevel, d);
-  if (cardOptions.length && !lu.card) problems.push('Choose your new domain card.');
-  const picked = lu.adv.map(a => a.id);
-  if (picked.some(id => !id)) problems.push('Choose two advancements.');
-  for (const adv of ADVANCEMENTS) {
-    const count = picked.filter(id => id === adv.id).length;
-    if (count && advancementUses(c, adv.id) + count > adv.max) problems.push(`"${adv.label}" is used up.`);
-  }
-  const traitPicks = lu.adv.filter(a => a.id === 'traits').flatMap(a => [a.a, a.b]);
-  if (traitPicks.some(t => !t)) problems.push('Choose two traits for each trait advancement.');
-  if (new Set(traitPicks).size !== traitPicks.length) problems.push('Each trait can only be raised once.');
-  if (traitPicks.some(t => c.traitBonus[t])) problems.push('Marked traits can\'t be raised again.');
-  for (const a of lu.adv.filter(x => x.id === 'experiences')) {
-    if (a.a === '' || a.b === '' || a.a === a.b) problems.push('Choose two different Experiences.');
-  }
-  if (newLevel === 2 && !lu.newExp.trim()) problems.push('Name your new Experience (level 2).');
-  return problems;
-}
-
 function levelUpCardOptions(c, newLevel, d) {
   const domains = d.cls ? d.cls.domains : [];
   return charState.data.cards.filter(card => card.source?.kind === 'domain' && domains.includes(card.owner)
     && (card.source.level ?? 1) <= newLevel && !c.cards.some(e => e.key === cardKey(card)));
 }
 
-function renderLevelUp(c) {
-  const lu = charState.levelUp;
-  if (!lu) return '';
-  const newLevel = c.level + 1;
-  const d = derive(c);
-  const cardOptions = levelUpCardOptions(c, newLevel, d);
-  const problems = levelUpProblems(c, lu);
-  const traitOpts = sel => TRAITS.map(t => opt(t, `${t}${c.traitBonus[t] ? ' (marked)' : ''}`, t === sel)).join('');
-  const expOpts = sel => c.experiences.map((e, i) => opt(i, e.name || `Experience ${i + 1}`, String(i) === String(sel))).join('');
-  return `
-    <div class="panel level-up no-print">
-      <h3>Level up to ${newLevel}</h3>
-      <p class="eyebrow">Damage thresholds rise by 1 automatically.</p>
-      <div class="field-row">
-        <span class="eyebrow">New domain card</span>
-        <select class="field" data-lu="card">
-          ${opt('', cardOptions.length ? 'Choose…' : 'No cards available', !lu.card)}
-          ${cardOptions.map(card => opt(cardKey(card), `${domainName(card.owner)} · L${card.source.level} · ${card.name}`, cardKey(card) === lu.card)).join('')}
-        </select>
-      </div>
-      ${lu.adv.map((a, k) => `
-        <div class="field-row">
-          <span class="eyebrow">Advancement ${k + 1}</span>
-          <select class="field" data-lu="adv.${k}.id">
-            ${opt('', 'Choose…', !a.id)}
-            ${ADVANCEMENTS.map(adv => opt(adv.id, `${adv.label} (${adv.max - advancementUses(c, adv.id)} left)`, adv.id === a.id)).join('')}
-          </select>
-        </div>
-        ${a.id === 'traits' ? `<div class="field-row"><span></span><div class="pair">
-          <select class="field" data-lu="adv.${k}.a">${opt('', 'Trait…', !a.a)}${traitOpts(a.a)}</select>
-          <select class="field" data-lu="adv.${k}.b">${opt('', 'Trait…', !a.b)}${traitOpts(a.b)}</select></div></div>` : ''}
-        ${a.id === 'experiences' ? `<div class="field-row"><span></span><div class="pair">
-          <select class="field" data-lu="adv.${k}.a">${opt('', 'Experience…', a.a === '')}${expOpts(a.a)}</select>
-          <select class="field" data-lu="adv.${k}.b">${opt('', 'Experience…', a.b === '')}${expOpts(a.b)}</select></div></div>` : ''}`).join('')}
-      ${newLevel === 2 ? `
-        <div class="field-row">
-          <span class="eyebrow">New Experience (+2)</span>
-          <input class="field" data-lu="newExp" value="${escapeHtml(lu.newExp)}" placeholder="e.g. Survived Sector 7">
-        </div>` : ''}
-      ${problems.length ? `<ul class="plain-list warn">${problems.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : ''}
-      <div class="btn-row">
-        <button class="btn primary" data-act="lu-confirm">Confirm level ${newLevel}</button>
-        <button class="btn" data-act="lu-cancel">Cancel</button>
-      </div>
-    </div>`;
+function cardProblems(c, lu) {
+  const options = levelUpCardOptions(c, c.level + 1, derive(c));
+  return options.length && !lu.card ? ['Choose your new domain card.'] : [];
+}
+
+// Problems with advancement k, taking earlier advancements in this level-up into account.
+function advProblems(c, lu, k) {
+  const a = lu.adv[k];
+  if (!a.id) return ['Choose an advancement.'];
+  const adv = ADVANCEMENTS.find(x => x.id === a.id);
+  const problems = [];
+  const sameBefore = lu.adv.slice(0, k + 1).filter(x => x.id === a.id).length;
+  if (advancementUses(c, a.id) + sameBefore > adv.max) problems.push(`"${adv.label}" is used up.`);
+  if (a.id === 'traits') {
+    const earlier = lu.adv.slice(0, k).filter(x => x.id === 'traits').flatMap(x => [x.a, x.b]);
+    if (!a.a || !a.b) problems.push('Choose two traits.');
+    else if (a.a === a.b) problems.push('Choose two different traits.');
+    if ([a.a, a.b].some(t => t && c.traitBonus[t])) problems.push('Marked traits can\'t be raised again.');
+    if ([a.a, a.b].some(t => t && earlier.includes(t))) problems.push('That trait is already raised in this level-up.');
+  }
+  if (a.id === 'experiences' && (a.a === '' || a.b === '' || a.a === a.b)) problems.push('Choose two different Experiences.');
+  return problems;
+}
+
+function newExpProblems(c, lu) {
+  return c.level + 1 === 2 && !lu.newExp.trim() ? ['Name your new Experience.'] : [];
+}
+
+function levelUpProblems(c, lu) {
+  return [...cardProblems(c, lu), ...advProblems(c, lu, 0), ...advProblems(c, lu, 1), ...newExpProblems(c, lu)];
 }
 
 function applyLevelUp(c) {
@@ -569,6 +536,317 @@ function undoLevelUp(c) {
   const history = [...c.history];
   const snapshot = JSON.parse(history.pop());
   Object.assign(c, normalizeChar({ ...snapshot, id: c.id, history }));
+}
+
+// ---------- Wizards ----------
+
+// A selectable card tile used by both wizards.
+function pickCard(card, selected, act) {
+  return `
+    <button class="pick-card${selected ? ' selected' : ''}" data-act="${act}" data-key="${escapeHtml(cardKey(card))}" style="--domain:${domainColor(card.owner)}">
+      <span class="pick-head"><strong>${escapeHtml(card.name)}</strong>
+        <span class="tag">${escapeHtml(domainName(card.owner))}</span>
+        ${card.source?.level != null ? `<span class="tag">Level ${card.source.level}</span>` : ''}
+        <span class="tag">${plural(card.slots ?? 1, 'slot')}</span>
+        <span class="tag">Recall ${card.recall ?? 0}</span></span>
+      <ul class="features">${lines(card.text)}</ul>
+    </button>`;
+}
+
+const problemList = problems => (problems.length
+  ? `<ul class="plain-list warn">${problems.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : '');
+
+// --- Creation wizard ---
+
+const CREATE_STEPS = [
+  {
+    title: 'Name & class',
+    render(c) {
+      return `
+        <div class="field-row"><span class="eyebrow">Name</span>
+          <input class="field" data-field="name" value="${escapeHtml(c.name)}" placeholder="Character name"></div>
+        <div class="pick-grid">
+          ${charState.data.classes.map(cls => `
+            <button class="pick-card${cls.id === c.classId ? ' selected' : ''}" data-act="wz-class" data-id="${escapeHtml(cls.id)}" style="--domain:var(--accent)">
+              <span class="pick-head"><strong>${escapeHtml(cls.name)}</strong>
+                <span class="tag">${escapeHtml(cls.domains.map(domainName).join(' + '))}</span></span>
+              <em class="muted">${escapeHtml(cls.fantasy)}</em>
+              <span class="eyebrow">Evasion ${cls.stats.evasion ?? '–'} · HP ${cls.stats.hp ?? '–'} · Stress ${cls.stats.stress ?? '–'}</span>
+              <span class="muted">${['main', 'flair', 'hope'].map(k => escapeHtml(cls.features[k].name || '')).filter(Boolean).join(' · ')}</span>
+            </button>`).join('')}
+        </div>`;
+    },
+    problems: c => [...(c.name.trim() ? [] : ['Give your character a name.']), ...(c.classId ? [] : ['Choose a class.'])],
+  },
+  {
+    title: 'Traits',
+    render(c) {
+      const remaining = [...TRAIT_ARRAY];
+      for (const t of TRAITS) {
+        const i = remaining.indexOf(c.traits[t]);
+        if (c.traits[t] != null && i >= 0) remaining.splice(i, 1);
+      }
+      return `
+        <p class="lede">Assign the values +2, +1, +1, +0, +0 and −1 to your six traits.</p>
+        <p class="eyebrow">Still to assign: ${remaining.length ? remaining.map(signed).join(', ') : 'nothing'}</p>
+        ${renderTraits(c, derive(c))}`;
+    },
+    problems: c => {
+      const p = traitArrayProblem(c);
+      return p ? [p] : [];
+    },
+  },
+  {
+    title: 'Experiences',
+    render(c) {
+      return `
+        <p class="lede">Two Experiences at +2. Recommended: one for your job (what you do for a living) and one personal (hobby, past, quirk). Whether you're a professional or a civilian shows here, and your Experiences also explain your tools.</p>
+        ${renderExperiences(c)}`;
+    },
+    problems: c => (c.experiences.slice(0, 2).every(e => e.name.trim()) ? [] : ['Name both Experiences.']),
+  },
+  {
+    title: 'Domain cards',
+    render(c) {
+      const d = derive(c);
+      const options = charState.data.cards.filter(card => card.source?.kind === 'domain'
+        && d.cls?.domains.includes(card.owner) && (card.source.level ?? 1) <= 1);
+      const chosen = c.cards.length;
+      return `
+        <p class="lede">Choose 2 level-1 cards from your class's domains (${escapeHtml(d.cls?.domains.map(domainName).join(' and ') || '')}).</p>
+        <p class="eyebrow">Chosen: ${chosen} / 2</p>
+        <div class="pick-grid">${options.map(card => pickCard(card, c.cards.some(e => e.key === cardKey(card)), 'wz-card')).join('')}</div>`;
+    },
+    problems: c => (c.cards.length === 2 ? [] : ['Choose exactly 2 cards.']),
+  },
+  {
+    title: 'Equipment',
+    render(c) {
+      return `
+        <p class="lede">Your GM decides your starting gear based on the adventure's tier. Pick what they allow; you can change it later on the sheet.</p>
+        ${renderEquipment(c, derive(c))}`;
+    },
+    problems: () => [],
+  },
+  {
+    title: 'Review',
+    render(c) {
+      const d = derive(c);
+      return `
+        <div class="class-stats">
+          <span class="stat"><span class="stat-value">${d.evasion}</span><span class="eyebrow">Evasion</span></span>
+          <span class="stat"><span class="stat-value">${d.hpMax}</span><span class="eyebrow">HP</span></span>
+          <span class="stat"><span class="stat-value">${d.stressMax}</span><span class="eyebrow">Stress</span></span>
+          <span class="stat"><span class="stat-value">${START_HOPE}/${MAX_HOPE}</span><span class="eyebrow">Hope</span></span>
+          <span class="stat"><span class="stat-value">${d.armorScore}</span><span class="eyebrow">Armor Score</span></span>
+          <span class="stat"><span class="stat-value">${d.major}/${d.severe}</span><span class="eyebrow">Thresholds</span></span>
+        </div>
+        <ul class="plain-list review">
+          <li><span class="eyebrow">Name</span> ${escapeHtml(c.name)}</li>
+          <li><span class="eyebrow">Class</span> ${escapeHtml(d.cls?.name || '–')}</li>
+          <li><span class="eyebrow">Traits</span> ${TRAITS.map(t => `${t} ${signed(d.traitValue(t))}`).join(', ')}</li>
+          <li><span class="eyebrow">Experiences</span> ${c.experiences.map(e => `${escapeHtml(e.name)} ${signed(e.value)}`).join(', ')}</li>
+          <li><span class="eyebrow">Cards</span> ${d.ownedCards.map(x => escapeHtml(x.card.name)).join(', ')}</li>
+          <li><span class="eyebrow">Armor</span> ${escapeHtml(c.armor)}${c.shield.name ? ` + ${escapeHtml(c.shield.name)}` : ''}</li>
+          <li><span class="eyebrow">Weapons</span> ${c.weapons.map(w => escapeHtml(w.name || w.category)).join(', ') || '–'}</li>
+          <li><span class="eyebrow">Consumables</span> ${c.consumables.map(escapeHtml).join(', ') || '–'}</li>
+        </ul>`;
+    },
+    problems: () => [],
+  },
+];
+
+// --- Level-up wizard ---
+
+function levelSteps(c) {
+  const steps = [
+    {
+      title: 'Overview',
+      render() {
+        const newLevel = c.level + 1;
+        return `
+          <p class="lede">Level ${c.level} → ${newLevel}. You gain:</p>
+          <ul class="plain-list">
+            <li>One new domain card of level ${newLevel} or lower</li>
+            <li>Two advancements</li>
+            <li>+1 to your damage thresholds (automatic)</li>
+            ${newLevel === 2 ? '<li>A new Experience at +2</li>' : ''}
+          </ul>`;
+      },
+      problems: () => [],
+    },
+    {
+      title: 'New domain card',
+      render(lu) {
+        const options = levelUpCardOptions(c, c.level + 1, derive(c));
+        return options.length
+          ? `<div class="pick-grid">${options.map(card => pickCard(card, card && cardKey(card) === lu.card, 'wz-lu-card')).join('')}</div>`
+          : '<p class="status">No new cards are available for your domains yet.</p>';
+      },
+      problems: lu => cardProblems(c, lu),
+    },
+    ...[0, 1].map(k => ({
+      title: `Advancement ${k + 1}`,
+      render(lu) {
+        const a = lu.adv[k];
+        const traitOpts = sel => TRAITS.map(t => opt(t, `${t}${c.traitBonus[t] ? ' (marked)' : ''}`, t === sel)).join('');
+        const expOpts = sel => c.experiences.map((e, i) => opt(i, e.name || `Experience ${i + 1}`, String(i) === String(sel))).join('');
+        return `
+          <div class="pick-list">
+            ${ADVANCEMENTS.map(adv => {
+              const used = advancementUses(c, adv.id) + lu.adv.slice(0, k).filter(x => x.id === adv.id).length;
+              const left = adv.max - used;
+              return `<button class="pick-row${a.id === adv.id ? ' selected' : ''}" data-act="wz-adv" data-k="${k}" data-id="${adv.id}" ${left <= 0 ? 'disabled' : ''}>
+                <span>${escapeHtml(adv.label)}</span><span class="eyebrow">${left} left</span></button>`;
+            }).join('')}
+          </div>
+          ${a.id === 'traits' ? `<div class="pair">
+            <select class="field" data-lu="adv.${k}.a">${opt('', 'Trait…', !a.a)}${traitOpts(a.a)}</select>
+            <select class="field" data-lu="adv.${k}.b">${opt('', 'Trait…', !a.b)}${traitOpts(a.b)}</select></div>` : ''}
+          ${a.id === 'experiences' ? `<div class="pair">
+            <select class="field" data-lu="adv.${k}.a">${opt('', 'Experience…', a.a === '')}${expOpts(a.a)}</select>
+            <select class="field" data-lu="adv.${k}.b">${opt('', 'Experience…', a.b === '')}${expOpts(a.b)}</select></div>` : ''}`;
+      },
+      problems: lu => advProblems(c, lu, k),
+    })),
+  ];
+  if (c.level + 1 === 2) {
+    steps.push({
+      title: 'New Experience',
+      render(lu) {
+        return `
+          <p class="lede">A new Experience at +2. Something your character learned or lived through.</p>
+          <input class="field" data-lu="newExp" value="${escapeHtml(lu.newExp)}" placeholder="e.g. Survived Sector 7">`;
+      },
+      problems: lu => newExpProblems(c, lu),
+    });
+  }
+  steps.push({
+    title: 'Review',
+    render(lu) {
+      const card = lu.card ? findCard(lu.card) : null;
+      const advLabel = a => {
+        const adv = ADVANCEMENTS.find(x => x.id === a.id);
+        if (a.id === 'traits') return `+1 ${a.a}, +1 ${a.b}`;
+        if (a.id === 'experiences') return `+1 ${c.experiences[Number(a.a)]?.name || '?'}, +1 ${c.experiences[Number(a.b)]?.name || '?'}`;
+        return adv?.label || '–';
+      };
+      return `
+        <ul class="plain-list review">
+          <li><span class="eyebrow">New level</span> ${c.level + 1}</li>
+          <li><span class="eyebrow">New card</span> ${card ? escapeHtml(card.name) : '–'}</li>
+          ${lu.adv.map((a, k) => `<li><span class="eyebrow">Advancement ${k + 1}</span> ${escapeHtml(advLabel(a))}</li>`).join('')}
+          ${c.level + 1 === 2 ? `<li><span class="eyebrow">New Experience</span> ${escapeHtml(lu.newExp)} +2</li>` : ''}
+        </ul>
+        ${problemList(levelUpProblems(c, lu))}`;
+    },
+    problems: lu => levelUpProblems(c, lu),
+  });
+  return steps;
+}
+
+function wizardSteps() {
+  const wz = charState.wizard;
+  return wz.type === 'create' ? CREATE_STEPS : levelSteps(currentChar());
+}
+
+function stepProblems(step) {
+  const wz = charState.wizard;
+  return wz.type === 'create' ? step.problems(wz.draft) : step.problems(charState.levelUp);
+}
+
+function renderWizard() {
+  const wz = charState.wizard;
+  const steps = wizardSteps();
+  const step = steps[wz.step];
+  const last = wz.step === steps.length - 1;
+  const body = wz.type === 'create' ? step.render(wz.draft) : step.render(charState.levelUp);
+  const title = wz.type === 'create' ? 'New character' : `Level up: ${escapeHtml(currentChar().name)}`;
+  return `
+    <section class="wizard">
+      <p class="eyebrow">${title}</p>
+      <ol class="wizard-steps">
+        ${steps.map((s, i) => `<li class="${i === wz.step ? 'current' : i < wz.step ? 'done' : ''}">${escapeHtml(s.title)}</li>`).join('')}
+      </ol>
+      <h1>${escapeHtml(step.title)}</h1>
+      <div class="wizard-body">${body}</div>
+      ${wz.showProblems ? problemList(stepProblems(step)) : ''}
+      <div class="btn-row wizard-nav">
+        <button class="btn" data-act="wz-back" ${wz.step === 0 ? 'disabled' : ''}>Back</button>
+        ${last
+          ? `<button class="btn primary" data-act="wz-finish">${wz.type === 'create' ? 'Create character' : `Confirm level ${currentChar().level + 1}`}</button>`
+          : '<button class="btn primary" data-act="wz-next">Next</button>'}
+        <button class="btn" data-act="wz-cancel">Cancel</button>
+      </div>
+    </section>`;
+}
+
+function startCreateWizard() {
+  charState.wizard = { type: 'create', step: 0, draft: newCharacter(), showProblems: false };
+  charState.exportCode = null;
+}
+
+function startLevelWizard() {
+  charState.levelUp = { card: '', adv: [{ id: '', a: '', b: '' }, { id: '', a: '', b: '' }], newExp: '' };
+  charState.wizard = { type: 'level', step: 0, showProblems: false };
+  charState.exportCode = null;
+}
+
+// Wizard buttons; returns true if the click was handled.
+function handleWizardClick(act, btn) {
+  const wz = charState.wizard;
+  if (!wz) return false;
+  const c = currentChar();
+  const steps = wizardSteps();
+  const step = steps[wz.step];
+  switch (act) {
+    case 'wz-next':
+      if (stepProblems(step).length) { wz.showProblems = true; break; }
+      wz.step += 1;
+      wz.showProblems = false;
+      break;
+    case 'wz-back':
+      wz.step = Math.max(0, wz.step - 1);
+      wz.showProblems = false;
+      break;
+    case 'wz-cancel':
+      if (wz.type === 'create' && !confirm('Discard this new character?')) return true;
+      charState.wizard = null;
+      charState.levelUp = null;
+      break;
+    case 'wz-finish':
+      if (stepProblems(step).length) { wz.showProblems = true; break; }
+      if (wz.type === 'create') {
+        charState.chars.push(wz.draft);
+        charState.currentId = wz.draft.id;
+      } else {
+        applyLevelUp(c);
+      }
+      charState.wizard = null;
+      writeChars();
+      break;
+    case 'wz-class':
+      if (c.classId !== btn.dataset.id) c.cards = [];
+      c.classId = btn.dataset.id;
+      break;
+    case 'wz-card': {
+      const key = btn.dataset.key;
+      const i = c.cards.findIndex(e => e.key === key);
+      if (i >= 0) c.cards.splice(i, 1);
+      else if (c.cards.length < 2) c.cards.push({ key, vaulted: false });
+      break;
+    }
+    case 'wz-lu-card':
+      charState.levelUp.card = btn.dataset.key;
+      break;
+    case 'wz-adv':
+      charState.levelUp.adv[Number(btn.dataset.k)] = { id: btn.dataset.id, a: '', b: '' };
+      break;
+    default:
+      return false;
+  }
+  renderCharacters();
+  return true;
 }
 
 // ---------- Export / import ----------
@@ -610,6 +888,7 @@ function renderCharSidebar() {
 }
 
 function renderSheet() {
+  if (charState.wizard) return renderWizard();
   const c = currentChar();
   if (!c) {
     return `
@@ -624,7 +903,6 @@ function renderSheet() {
   return `
     ${charState.notice ? `<p class="warn">${escapeHtml(charState.notice)}</p>` : ''}
     ${renderHeader(c, d)}
-    ${renderLevelUp(c)}
     ${renderCore(c, d)}
     <div class="sheet-grid">
       ${renderTraits(c, d)}
@@ -670,15 +948,15 @@ function handleClick(e) {
   const i = Number(btn.dataset.i);
   charState.notice = '';
 
+  if (act.startsWith('wz-') && handleWizardClick(act, btn)) return;
   if (act === 'new') {
-    const fresh = newCharacter();
-    charState.chars.push(fresh);
-    charState.currentId = fresh.id;
-    charState.levelUp = null;
-    charState.exportCode = null;
-    return commit();
+    if (charState.wizard && !confirm('Leave the current wizard?')) return;
+    startCreateWizard();
+    return renderCharacters();
   }
   if (act === 'select') {
+    if (charState.wizard && !confirm('Leave the current wizard?')) return;
+    charState.wizard = null;
     charState.currentId = btn.dataset.id;
     charState.levelUp = null;
     charState.exportCode = null;
@@ -775,16 +1053,8 @@ function handleClick(e) {
       c.ailments.splice(i, 1);
       break;
     case 'level-up':
-      charState.levelUp = { card: '', adv: [{ id: '', a: '', b: '' }, { id: '', a: '', b: '' }], newExp: '' };
+      startLevelWizard();
       return renderCharacters();
-    case 'lu-cancel':
-      charState.levelUp = null;
-      return renderCharacters();
-    case 'lu-confirm':
-      // Problems are listed in the panel; re-render so the list reflects the latest input.
-      if (levelUpProblems(c, charState.levelUp).length) return renderCharacters();
-      applyLevelUp(c);
-      break;
     case 'undo-level':
       if (!confirm('Undo the last level-up? Changes made since then are lost.')) return;
       undoLevelUp(c);
