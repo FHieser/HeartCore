@@ -37,9 +37,15 @@ A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / 
 - **Professional or civilian** shows only through your job Experience; there are no extra background rules.
 - **Growth** as in Daggerheart: a new Experience at +2 at level 2; the advancement "+1 to two Experiences" stays available.
 
-### Ideas under consideration (not decided)
+### Starting gear
 
-- Scars from *Avoid Death* as a central horror element (dropped from the ailment tables for now).
+- Starting gear follows the **adventure's tier**: the GM decides what each character starts with, from equipment of that tier or lower.
+
+### Death moves
+
+- Daggerheart's three death moves apply: **Blaze of Glory**, **Avoid Death**, **Risk It All**.
+- **Avoid Death** always leaves a scar: you fall unconscious and **always cross out 1 Hope slot**, with no roll. If you cross out your last Hope slot, your character's journey ends (as in Daggerheart).
+- With max Hope 4, a character can survive Avoid Death at most three times before the fourth ends them.
 
 ---
 
@@ -89,6 +95,5 @@ Open:
 ## Open Topics
 
 1. **Domain cards:** level 1 is done for all four domains; levels 2–4 and their power curve are still open.
-2. **Starting gear:** what a new character starts with (armor, weapon, consumables), given that professional vs. civilian has no extra rules.
-3. **Adversaries and anomalies:** none designed yet; weapons and armor follow the Daggerheart benchmarks.
-4. **Death moves:** keep Daggerheart's Blaze of Glory / Avoid Death / Risk It All, or HeartCore versions?
+2. **Adversaries and anomalies:** none designed yet; weapons and armor follow the Daggerheart benchmarks.
+3. **GM side:** Fear and GM moves; guidance on spending the many Fear sources (Loud, Brute Force, Scream, Doomed, Coughing Fit, …).
