@@ -16,7 +16,7 @@ Short and long rests, rest actions (including Treat ailment) and what modifies t
 
 Ordinary gear: armor (incl. street clothes), shields, weapon categories with features, consumables. Tools come from Experiences.
 
-→ [data/mechanics/equipment.yaml](data/mechanics/equipment.yaml)
+→ [data/mechanics/equipment.yaml](data/mechanics/equipment.yaml) · webapp: `equipment.html`
 
 ## Ailments
 

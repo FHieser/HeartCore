@@ -251,6 +251,34 @@ function loadRest() {
   return restPromise;
 }
 
+// Equipment: armor, shields, weapon categories and consumables (data/mechanics/equipment.yaml).
+const EQUIPMENT_SECTIONS = [
+  { id: 'armor', name: 'Armor' },
+  { id: 'shields', name: 'Shields' },
+  { id: 'weapons', name: 'Weapons' },
+  { id: 'consumables', name: 'Consumables' },
+];
+
+let equipmentPromise;
+function loadEquipment() {
+  equipmentPromise ??= fetchText(`${DATA_ROOT}data/mechanics/equipment.yaml`).then(text => {
+    const e = jsyaml.load(text) || {};
+    return {
+      name: e.name || 'Equipment',
+      summary: e.summary || '',
+      rules: asList(e.rules),
+      open: asList(e.open),
+      sections: EQUIPMENT_SECTIONS.map(({ id, name }) => ({
+        id,
+        name,
+        rules: asList(e[id]?.rules),
+        items: asList(e[id]?.list).map(item => ({ ...item, text: asList(item.text) })),
+      })),
+    };
+  });
+  return equipmentPromise;
+}
+
 function domainColor(id, index = 0) {
   return DOMAIN_COLORS[id] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 }
@@ -260,7 +288,7 @@ function domainColor(id, index = 0) {
 function renderNav(current) {
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
-  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['rest', 'rest.html', 'Rest'], ['ailments', 'ailments.html', 'Ailments']]
+  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['rest', 'rest.html', 'Rest'], ['equipment', 'equipment.html', 'Equipment'], ['ailments', 'ailments.html', 'Ailments']]
     .map(([id, href, label]) => `<a href="${href}" class="${id === current ? 'current' : ''}">${label}</a>`)
     .join('');
 }
@@ -289,8 +317,9 @@ async function initOverview() {
   const root = document.getElementById('content');
   renderNav('overview');
   try {
-    const [sections, domains, classes, rest, ailments] = await Promise.all([
-      loadBaseline(), loadDomains(), loadClasses(), loadRest().catch(() => null), loadAilments().catch(() => null),
+    const [sections, domains, classes, rest, equipment, ailments] = await Promise.all([
+      loadBaseline(), loadDomains(), loadClasses(),
+      loadRest().catch(() => null), loadEquipment().catch(() => null), loadAilments().catch(() => null),
     ]);
     const all = [...domains, FOUND];
     const cardLists = await Promise.all(all.map(d => loadCards(d.id)));
@@ -339,6 +368,14 @@ async function initOverview() {
           </span>
           <span class="eyebrow">${plural(rest.actions.length, 'rest action')}</span>
         </a>` : ''}
+      ${equipment ? `
+        <a class="link-field" href="equipment.html">
+          <span class="link-field-title">Equipment →</span>
+          <span class="link-field-domains">
+            ${equipment.sections.filter(s => s.items.length).map(s => `<span style="--domain:#9a9a9a">${escapeHtml(s.name)}</span>`).join('')}
+          </span>
+          <span class="eyebrow">${plural(equipment.sections.reduce((n, s) => n + s.items.length, 0), 'item')}</span>
+        </a>` : ''}
       ${ailments ? `
         <a class="link-field" href="ailments.html">
           <span class="link-field-title">Ailments →</span>
@@ -347,7 +384,7 @@ async function initOverview() {
           </span>
           <span class="eyebrow">${plural(ailments.tables.reduce((n, t) => n + t.entries.length, 0), 'ailment')}</span>
         </a>` : ''}
-      ${rest || ailments ? '' : '<p class="status">No mechanics yet.</p>'}
+      ${rest || equipment || ailments ? '' : '<p class="status">No mechanics yet.</p>'}
     `;
   } catch (err) {
     showError(root, err);
@@ -648,6 +685,97 @@ function renderAilmentSection(table) {
       </header>
       <div class="cards ailment-cards">${table.entries.map(e => renderAilment(table, e)).join('')}</div>
     </section>`;
+}
+
+// ---------- Equipment page ----------
+
+const RARITY_LABELS = ['Common', 'Workplace / buildable', 'Traders', 'Special traders'];
+const equipmentId = (section, item) => `${section.id}-${slug(item.name || 'item')}`;
+
+function featureList(label, features) {
+  const list = asList(features);
+  if (!list.length) return '';
+  return `
+    <p class="eyebrow">${escapeHtml(label)}</p>
+    <ul class="options">${list.map(f => `
+      <li><strong>${escapeHtml(f.name || '')}</strong> ${highlightRules(escapeHtml(f.text || ''))}</li>`).join('')}
+    </ul>`;
+}
+
+function renderEquipmentItem(section, item) {
+  const stats = [
+    item.tier != null ? `Tier ${item.tier}` : null,
+    item.rarity != null ? `Rarity ${item.rarity} · ${RARITY_LABELS[item.rarity] || ''}` : null,
+    item.thresholds ? `Thresholds ${item.thresholds.join('/')}` : null,
+    section.id === 'armor' && item.score != null ? `Armor Score ${item.score}` : null,
+    section.id === 'shields' && item.score != null ? `+${item.score} Armor Score` : null,
+    item.trait,
+    item.range,
+    item.damage && item.damage !== 'none' ? `Damage ${item.damage}` : null,
+    item.burden,
+  ].filter(Boolean);
+  const lines = [item.effect, item.built_in, ...item.text].filter(Boolean);
+  return `
+    <article class="game-card" id="${equipmentId(section, item)}">
+      <header><h4>${escapeHtml(item.name || 'Unnamed')}</h4></header>
+      <div class="card-stats">${stats.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
+      ${item.examples ? `<p class="requires"><span class="eyebrow">Examples</span> ${escapeHtml(asList(item.examples).join(', '))}</p>` : ''}
+      ${lines.length ? `<ul class="features">${lines.map(t => `<li>${highlightRules(escapeHtml(t))}</li>`).join('')}</ul>` : ''}
+      ${featureList('Utility features', item.utility_features)}
+      ${featureList(item.utility_features ? 'Combat features' : 'Features', item.features)}
+    </article>`;
+}
+
+function renderEquipmentSidebar(e) {
+  return `
+    <p class="eyebrow">Contents</p>
+    <ol class="toc">
+      ${e.sections.filter(s => s.items.length).map(s => `
+        <li>
+          <a class="toc-domain" href="#${s.id}" data-section="${s.id}">${escapeHtml(s.name)}</a>
+          <ol>${s.items.map(item => `
+            <li><a class="toc-card" href="#${equipmentId(s, item)}">${escapeHtml(item.name || '')}</a></li>`).join('')}
+          </ol>
+        </li>`).join('')}
+    </ol>`;
+}
+
+async function initEquipment() {
+  const root = document.getElementById('content');
+  const sidebar = document.getElementById('sidebar');
+  renderNav('equipment');
+  try {
+    const e = await loadEquipment();
+    sidebar.innerHTML = renderEquipmentSidebar(e);
+    root.innerHTML = `
+      <section class="domains-intro">
+        <p class="eyebrow">Mechanics</p>
+        <h1>${escapeHtml(e.name)}</h1>
+        ${e.summary ? `<p class="lede">${escapeHtml(e.summary)}</p>` : ''}
+        ${e.rules.length ? `<div class="prose"><ul>${e.rules.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul></div>` : ''}
+      </section>
+
+      ${e.sections.filter(s => s.items.length).map(s => `
+        <section class="domain-section" id="${s.id}">
+          <header class="domain-head">
+            <p class="eyebrow">${s.items.length} ${s.items.length === 1 ? 'entry' : 'entries'}</p>
+            <h2>${escapeHtml(s.name)}</h2>
+            ${s.rules.length ? `<div class="prose"><ul>${s.rules.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul></div>` : ''}
+          </header>
+          <div class="cards ailment-cards">${s.items.map(item => renderEquipmentItem(s, item)).join('')}</div>
+        </section>`).join('')}
+
+      ${e.open.length ? `
+        <div class="class-notes ailment-notes">
+          <p class="eyebrow">Open</p><ul>${e.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>
+        </div>` : ''}
+    `;
+
+    watchSections(sidebar);
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  } catch (err) {
+    showError(root, err);
+  }
 }
 
 // ---------- Rest page ----------
