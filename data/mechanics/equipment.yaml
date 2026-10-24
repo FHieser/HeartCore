@@ -1,4 +1,4 @@
-# Equipment: ordinary gear (armor, weapons, consumables, tools).
+# Equipment: ordinary gear (armor, shields, weapons, consumables). Tools come from Experiences.
 # Extraordinary items (alien armor, heavy laser, artifacts, curses) are found cards in data/found/.
 # All text entries are one line each, no line breaks (same rule as cards).
 
@@ -8,6 +8,7 @@ summary: "Ordinary modern gear. A bit weaker than Daggerheart equipment: protect
 rules:
   - "Ordinary vs. extraordinary: mundane gear is equipment; anything special or anomalous is a found card."
   - "Equipment never takes loadout slots and can't be vaulted. It's simply part of the character sheet."
+  - "Tools come from Experiences: a character with a fitting Experience (e.g. Electrician) has the tools for it. There is no separate tool list."
 
 armor:
   rules:
@@ -39,21 +40,238 @@ armor:
       score: 3
       effect: "−2 Evasion, −1 Agility"
 
+# Shields are not weapons: no damage, trait or range.
+shields:
+  rules:
+    - "A shield raises your Armor Score while you carry it in one hand."
+    - "Each shield has exactly one feature from its list."
+    - "If you take a Severe hit while carrying a shield, it breaks. Your Armor Score drops back; slots already marked stay marked."
+  list:
+    - name: Improvised shield
+      examples: [trash can lid, tray, car door]
+      tier: 1
+      rarity: 0
+      score: 1
+      effect: "−1 Evasion"
+      features:
+        - name: Sacrificial
+          text: "When you take damage, you can choose to break the shield to reduce the damage by one level (Severe → Major, Major → Minor)."
+        - name: Bash
+          text: "You can attack with the shield as a light improvised weapon (d8+1). On a hit, the target is pushed back to Very Close range."
+        - name: Lightweight
+          text: "No Evasion penalty."
+    - name: Riot shield
+      tier: 2
+      rarity: 2
+      score: 2
+      effect: "−1 Evasion"
+      features:
+        - name: Reinforced
+          text: "+1 Armor Score. It doesn't break on the first Severe hit, only on the second."
+        - name: Shield wall
+          text: "While you don't move, allies directly behind you get +1 Evasion."
+        - name: Ballistic
+          text: "Ranged attacks against you have disadvantage while you carry the shield."
+        - name: Push forward
+          text: "As an action, move into Melee range of an adversary and push it back to Close range, without an attack roll."
+
+# Weapons are categories, not individual items. Values follow the Daggerheart weapon benchmarks;
+# Proficiency stays at 1 in HeartCore, so damage only grows through better weapons.
+# tier: adventure level the category is available at. rarity: 0 common · 1 workplace or buildable · 2 traders · 3 special traders.
 weapons:
-  rules: []
-  list: []
+  rules:
+    - "Each weapon has exactly one feature from its category's list. Exceptions: tool weapons have one utility feature and one combat feature; blades are versatile and have two features."
+    - "Thrown: any improvised melee weapon can be thrown at a target within Very Close range. Afterwards it lies on the floor."
+    - "Loud (firearms): the first shot in a scene gives the GM 1 Fear."
+    - "Close quarters (firearms): while an adversary is within Very Close range of you, you can't use the firearm at all."
+  list:
+    - name: Improvised (light)
+      examples: [wrench, pipe, crowbar]
+      tier: 1
+      rarity: 0
+      trait: Strength
+      range: Melee
+      damage: d8+1
+      burden: one-handed
+      features: &improvised_features
+        - name: Sturdy
+          text: "Advantage on rolls to pry open or break something."
+        - name: Reach
+          text: "Range Very Close instead of Melee."
+        - name: Disposable
+          text: "When you attack with it, in melee or thrown, you can choose to break it: add 1 damage die. Afterwards the weapon is destroyed."
+    - name: Improvised (heavy)
+      examples: [chair, pipe, bat]
+      tier: 1
+      rarity: 0
+      trait: Strength
+      range: Melee
+      damage: d10+3
+      burden: two-handed
+      features: *improvised_features
+    - name: Tool weapon
+      examples: [nail gun, bolt gun, welding torch]
+      tier: 1
+      rarity: 1
+      trait: Finesse
+      range: Very Close
+      damage: d4+4
+      burden: one-handed
+      utility_features:
+        - name: Fasten
+          text: "Nail doors, hatches or boards shut. They hold until something breaks through by force."
+        - name: Cut
+          text: "Cut through locks, chains, fences and thin metal doors without a roll. It takes time and makes noise."
+        - name: Repair
+          text: "Advantage on rolls to repair something; counts as the right tool for Duct Tape and a Prayer."
+        - name: Light
+          text: "Lights up the surroundings within Close range. Anomalies that fear light have to react to it."
+      features:
+        - name: Pin
+          text: "On a hit, the target is pinned in place and loses its next movement."
+        - name: Burn
+          text: "On a hit, the target also marks 1 Stress."
+        - name: Reach out
+          text: "Range Close instead of Very Close."
+        - name: Overload
+          text: "On an attack, you can overload the tool to deal double damage. Afterwards it can't be used until a short rest."
+    - name: Improvised ranged
+      examples: [homemade bow, pipe crossbow, slingshot]
+      tier: 2
+      rarity: 1
+      trait: Finesse
+      range: Far
+      damage: d6+6
+      burden: two-handed
+      features:
+        - name: Fire bolts
+          text: "On a hit, the target also marks 1 Stress, and the impact lights up the surroundings."
+        - name: Line
+          text: "Shoot a line or rope to a point within Far range. You and your allies can use it to climb or cross."
+        - name: Hasty
+          text: "You can build it in a calm moment from almost anything (rarity 0 instead of 1). After 3 attacks, it breaks."
+        - name: Scatter
+          text: "Spend 1 Hope to target a group: make one attack roll against each target within Very Close range of a point within range. Roll damage once; every target you hit takes half of it."
+    - name: Blade
+      examples: [knife, machete, scalpel]
+      tier: 2
+      rarity: 1
+      trait: Agility
+      range: Melee
+      damage: d6+4
+      burden: one-handed
+      built_in: "Versatile: choose two features instead of one."
+      features:
+        - name: Concealed
+          text: "Can't be found in a search. You always have it on you, even after being captured or searched."
+        - name: Precise
+          text: "You can reroll your damage roll and keep the new result."
+        - name: Throwable
+          text: "You can throw it at a target within Close range. Afterwards it lies on the floor."
+        - name: Silent kill
+          text: "If an attack with it kills the target, the kill makes no sound. Nothing nearby notices."
+        - name: Paired
+          text: "If you carry a second blade in your other hand, +2 damage."
+    - name: Light firearm
+      examples: [pistol, revolver]
+      tier: 2
+      rarity: 2
+      trait: Agility
+      range: Far
+      damage: d8+6
+      burden: one-handed
+      built_in: "Loud, close quarters."
+      features:
+        - name: Concealable
+          text: "Inconspicuous and easy to hide. It isn't found in a quick search, and NPCs don't notice it."
+        - name: Suppressed
+          text: "Not Loud: the first shot in a scene doesn't give the GM Fear."
+        - name: Quick draw
+          text: "Close quarters only applies within Melee range instead of Very Close."
+    - name: Heavy melee
+      examples: [fire axe, sledgehammer, chainsaw]
+      tier: 3
+      rarity: 1
+      trait: Strength
+      range: Melee
+      damage: d12+9
+      burden: two-handed
+      built_in: "−1 Evasion."
+      features:
+        - name: Breaker
+          text: "Break through doors, walls and obstacles without a roll."
+        - name: Sweeping
+          text: "Mark 1 Stress to attack all targets within Melee range with one roll."
+        - name: Knockback
+          text: "On a hit, the target is pushed back to Close range."
+        - name: Charge
+          text: "When you run straight at a target from at least Close range into Melee and attack it in the same action, +3 damage."
+    - name: Heavy firearm
+      examples: [rifle, shotgun, SMG]
+      tier: 3
+      rarity: 3
+      trait: Finesse
+      range: Far
+      damage: d8+9
+      burden: two-handed
+      built_in: "Loud, close quarters."
+      features:
+        - name: Scope
+          text: "Range Very Far instead of Far, and advantage on attacks against targets that haven't noticed you."
+        - name: Spread
+          text: "Range Close instead of Far, and close quarters only applies within Melee range. On a hit, every adversary within Very Close range of the target takes half damage."
+        - name: Burst
+          text: "Hit a second target within range with the same attack. Afterwards you need an action to reload."
+        - name: Suppressive fire
+          text: "Instead of dealing damage, fire at a point within range. Every adversary within Very Close range of it loses its next movement and has disadvantage on its next attack. Afterwards you need an action to reload."
 
 consumables:
-  rules: []
-  list: []
-
-# Reusable everyday items (flashlight, crowbar, radio, lighter, …).
-tools:
-  rules: []
-  list: []
+  rules:
+    - "Every consumable is single use: after using it, it's gone."
+    - "Temporary conditions hold until the adversary clears them; the GM can spend Fear to do so."
+  list:
+    - name: Painkillers
+      tier: 1
+      rarity: 1
+      text:
+        - "Until the end of the scene, ignore the effects of one physical ailment. When the scene ends, mark 1 Stress."
+    - name: Flare
+      tier: 1
+      rarity: 1
+      text:
+        - "Lights up an area within Far range until the end of the scene. Anomalies that fear light have to react to it. Visible from far away."
+    - name: Pepper spray
+      tier: 1
+      rarity: 2
+      text:
+        - "Make a Finesse attack against a target within Close range. On a hit, it's temporarily blinded (disadvantage on its attacks)."
+    - name: Taser cartridge
+      tier: 2
+      rarity: 2
+      text:
+        - "Make a Finesse attack against a target within Close range. On a hit, it marks 2 Stress. If that maxes out its Stress, it's temporarily stunned and can't act."
+    - name: Net or foam charge
+      tier: 2
+      rarity: 3
+      text:
+        - "Make a Finesse attack against a target within Close range. On a hit, it's temporarily restrained."
+    - name: Tranquilizer dart
+      tier: 2
+      rarity: 3
+      text:
+        - "Make a Finesse attack against a target within Close range. On a hit, it becomes drowsy (disadvantage on attacks). At the end of its next action, it falls temporarily asleep unless the GM spends Fear."
+    - name: Molotov
+      tier: 1
+      rarity: 1
+      text:
+        - "Throw it between yourself and a threat. A wall of fire blocks the way until the end of the scene; adversaries can't get through unless the GM spends Fear."
+    - name: Frag grenade
+      tier: 3
+      rarity: 3
+      text:
+        - "Make a Finesse attack against each target within Very Close range of a point within Far range. Damage d8+9. Loud."
 
 open:
   - "Special mundane armor with a feature (e.g. hazmat suit, bomb suit)."
-  - "Weapons: format, damage and ranges, a bit weaker than Daggerheart."
-  - "Consumables: format and first examples (medkits, flares, painkillers, …)."
-  - "Tools: format and first examples."
+  - "Real modern bows and crossbows as a stronger rarity 2–3 variant."
+  - "More consumables (medkit, adrenaline shot, flashbang, …)."
