@@ -23,7 +23,8 @@ const ADVANCEMENTS = [
 ];
 
 // wizard: null | { type: 'create', step, draft } | { type: 'level', step } (level-up choices live in levelUp).
-const charState = { data: null, chars: [], currentId: null, levelUp: null, wizard: null, exportCode: null, notice: '' };
+// rest: null | { type: 'short' | 'long', picks: [action names], treat, patient, medbay, houseCall }
+const charState = { data: null, chars: [], currentId: null, levelUp: null, wizard: null, rest: null, exportCode: null, notice: '' };
 
 // ---------- Storage ----------
 
@@ -94,12 +95,12 @@ function normalizeChar(c) {
 // ---------- Data lookups ----------
 
 async function loadCharacterData() {
-  const [classes, domains, hcore, equipment, ailments] = await Promise.all([
-    loadClasses(), loadDomains(), loadHcore(), loadEquipment(), loadAilments(),
+  const [classes, domains, hcore, equipment, ailments, rest] = await Promise.all([
+    loadClasses(), loadDomains(), loadHcore(), loadEquipment(), loadAilments(), loadRest(),
   ]);
   const domainCards = await Promise.all(domains.map(async d => (await loadCards(d.id)).map(card => ({ ...card, owner: d.id }))));
   const cards = [...domainCards.flat(), ...hcore.cards.map(card => ({ ...card, owner: HCORE.id }))];
-  return { classes, domains, hcore, equipment, ailments, cards };
+  return { classes, domains, hcore, equipment, ailments, rest, cards };
 }
 
 const cardKey = card => `${card.owner}:${card.name}`;
@@ -222,6 +223,8 @@ function renderHeader(c, d) {
         </select>
       </div>
       <div class="btn-row no-print">
+        <button class="btn primary" data-act="rest-start" data-type="short">Short rest</button>
+        <button class="btn primary" data-act="rest-start" data-type="long">Long rest</button>
         <button class="btn primary" data-act="level-up" ${c.level >= MAX_LEVEL || !c.classId ? 'disabled' : ''}>Level up</button>
         <button class="btn" data-act="undo-level" ${c.history.length ? '' : 'disabled'}>Undo level-up</button>
         <button class="btn" data-act="export-code">Export code</button>
@@ -587,6 +590,111 @@ function undoLevelUp(c) {
   const history = [...c.history];
   const snapshot = JSON.parse(history.pop());
   Object.assign(c, normalizeChar({ ...snapshot, id: c.id, history }));
+}
+
+// ---------- Rest ----------
+
+// What each base rest action does (names match data/mechanics/rest.yaml).
+const REST_EFFECTS = {
+  'Clear HP': c => { c.marked.hp = Math.max(0, c.marked.hp - 1); },
+  'Clear Stress': c => { c.marked.stress = Math.max(0, c.marked.stress - 1); },
+  'Gain Hope': (c, d) => { c.hope = Math.min(d.hopeMax, c.hope + 1); },
+  'Repair Armor': c => { c.marked.armor = Math.max(0, c.marked.armor - 1); },
+};
+const TREAT_ACTION = 'Treat ailment';
+// Ailment durations that end with each kind of rest.
+const REST_ENDS = { short: ['instant', 'scene', 'short_rest'], long: ['instant', 'scene', 'short_rest', 'long_rest'] };
+
+function ailmentEntry(a) {
+  const table = charState.data.ailments.tables.find(t => t.id === a.table);
+  return table?.entries.find(e => e.name === a.name);
+}
+
+const restAction = name => charState.data.rest.actions.find(a => a.name === name);
+const restCost = r => r.picks.reduce((n, name) => n + (restAction(name)?.cost ?? 1), 0);
+
+function restBudget(c, type) {
+  const rest = charState.data.rest.rests.find(x => x.name.toLowerCase().startsWith(type));
+  const base = rest?.actions ?? (type === 'long' ? 4 : 2);
+  return Math.max(0, base - (c.ailments.some(a => a.name === 'Haunted') ? 1 : 0));
+}
+
+function restProblems(c, r) {
+  const problems = [];
+  const budget = restBudget(c, r.type);
+  if (restCost(r) > budget) problems.push(`Too many actions: ${restCost(r)} of ${budget}.`);
+  if (r.picks.includes(TREAT_ACTION)) {
+    if (!r.patient && !r.medbay) problems.push('Treat ailment needs a Doctor (House Call) or a medbay or hospital.');
+    if (r.treat === '') problems.push('Choose the ailment to treat.');
+  }
+  if (r.patient && !r.houseCall) problems.push('Choose the House Call bonus.');
+  return problems;
+}
+
+function applyRest(c, r) {
+  const d = derive(c);
+  const done = [];
+  for (const name of r.picks) {
+    if (REST_EFFECTS[name]) {
+      REST_EFFECTS[name](c, d);
+      done.push(name);
+    }
+  }
+  if (r.patient && r.houseCall) {
+    REST_EFFECTS[r.houseCall === 'hp' ? 'Clear HP' : 'Clear Stress'](c, d);
+    done.push(`House Call: clear 1 ${r.houseCall === 'hp' ? 'HP' : 'Stress'}`);
+  }
+  if (r.picks.includes(TREAT_ACTION) && r.treat !== '') {
+    const [treated] = c.ailments.splice(Number(r.treat), 1);
+    if (treated) done.push(`treated ${treated.name}`);
+  }
+  const ends = REST_ENDS[r.type];
+  const ended = c.ailments.filter(a => ends.includes(ailmentEntry(a)?.lasts)).map(a => a.name);
+  c.ailments = c.ailments.filter(a => !ends.includes(ailmentEntry(a)?.lasts));
+  charState.notice = `${r.type === 'long' ? 'Long' : 'Short'} rest: ${done.join(', ') || 'no actions'}.${ended.length ? ` Ailments ended: ${ended.join(', ')}.` : ''}`;
+}
+
+function renderRest(c) {
+  const r = charState.rest;
+  if (!r) return '';
+  const budget = restBudget(c, r.type);
+  const used = restCost(r);
+  const treatable = c.ailments.map((a, i) => ({ a, i })).filter(({ a }) => ailmentEntry(a)?.lasts === 'treated');
+  const ending = c.ailments.filter(a => REST_ENDS[r.type].includes(ailmentEntry(a)?.lasts)).map(a => a.name);
+  return `
+    <div class="panel level-up no-print">
+      <h3>${r.type === 'long' ? 'Long' : 'Short'} rest <span class="eyebrow">${used} / ${budget} actions · each action once</span></h3>
+      ${c.ailments.some(a => a.name === 'Haunted') ? '<p class="warn">Haunted: 1 rest action fewer.</p>' : ''}
+      <div class="pick-list">
+        ${charState.data.rest.actions.map(a => {
+          const selected = r.picks.includes(a.name);
+          const cost = a.cost ?? 1;
+          const tooMuch = !selected && used + cost > budget;
+          return `<button class="pick-row${selected ? ' selected' : ''}" data-act="rest-toggle" data-name="${escapeHtml(a.name)}" ${tooMuch ? 'disabled' : ''}>
+            <span>${escapeHtml(a.name)} <span class="muted">${escapeHtml(a.text[0] || '')}${a.requires ? ` (${escapeHtml(a.requires)})` : ''}</span></span>
+            <span class="eyebrow">${plural(cost, 'action')}</span></button>`;
+        }).join('')}
+      </div>
+      <label class="check"><input type="checkbox" data-rest="patient" ${r.patient ? 'checked' : ''}> I'm the Doctor's patient (House Call)</label>
+      ${r.patient ? `
+        <div class="field-row"><span class="eyebrow">House Call bonus</span>
+          <select class="field" data-rest="houseCall">
+            ${opt('', 'Choose…', !r.houseCall)}${opt('hp', 'Clear 1 additional HP', r.houseCall === 'hp')}${opt('stress', 'Clear 1 additional Stress', r.houseCall === 'stress')}
+          </select></div>` : ''}
+      <label class="check"><input type="checkbox" data-rest="medbay" ${r.medbay ? 'checked' : ''}> Resting at a medbay or hospital</label>
+      ${r.picks.includes(TREAT_ACTION) ? `
+        <div class="field-row"><span class="eyebrow">Treat</span>
+          <select class="field" data-rest="treat">
+            ${opt('', treatable.length ? 'Choose an ailment…' : 'No ailment needs treatment', r.treat === '')}
+            ${treatable.map(({ a, i }) => opt(i, a.name, String(i) === String(r.treat))).join('')}
+          </select></div>` : ''}
+      <p class="eyebrow">Ailments that end with this rest: ${ending.length ? escapeHtml(ending.join(', ')) : 'none'}</p>
+      ${problemList(restProblems(c, r))}
+      <div class="btn-row">
+        <button class="btn primary" data-act="rest-confirm">Finish rest</button>
+        <button class="btn" data-act="rest-cancel">Cancel</button>
+      </div>
+    </div>`;
 }
 
 // ---------- Wizards ----------
@@ -973,6 +1081,7 @@ function renderSheet() {
   return `
     ${charState.notice ? `<p class="warn">${escapeHtml(charState.notice)}</p>` : ''}
     ${renderHeader(c, d)}
+    ${renderRest(c)}
     ${renderCore(c, d)}
     <div class="sheet-grid">
       ${renderTraits(c, d)}
@@ -1026,6 +1135,7 @@ function handleClick(e) {
   if (act === 'select') {
     if (charState.wizard && !confirm('Leave the current wizard?')) return;
     charState.wizard = null;
+    charState.rest = null;
     charState.currentId = btn.dataset.id;
     charState.levelUp = null;
     charState.exportCode = null;
@@ -1122,8 +1232,27 @@ function handleClick(e) {
       c.ailments.splice(i, 1);
       break;
     case 'level-up':
+      charState.rest = null;
       startLevelWizard();
       return renderCharacters();
+    case 'rest-start':
+      charState.rest = { type: btn.dataset.type, picks: [], treat: '', patient: false, medbay: false, houseCall: '' };
+      return renderCharacters();
+    case 'rest-toggle': {
+      const name = btn.dataset.name;
+      const r = charState.rest;
+      r.picks = r.picks.includes(name) ? r.picks.filter(n => n !== name) : [...r.picks, name];
+      if (!r.picks.includes(TREAT_ACTION)) r.treat = '';
+      return renderCharacters();
+    }
+    case 'rest-cancel':
+      charState.rest = null;
+      return renderCharacters();
+    case 'rest-confirm':
+      if (restProblems(c, charState.rest).length) return renderCharacters();
+      applyRest(c, charState.rest);
+      charState.rest = null;
+      break;
     case 'undo-level':
       if (!confirm('Undo the last level-up? Changes made since then are lost.')) return;
       undoLevelUp(c);
@@ -1140,6 +1269,10 @@ function handleChange(e) {
   if (!c) return;
   // Text fields are saved by handleInput; re-rendering on blur would swallow the next click.
   if (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && el.type !== 'checkbox')) return;
+  if (el.dataset.rest !== undefined && charState.rest) {
+    charState.rest[el.dataset.rest] = readValue(el);
+    return renderCharacters();
+  }
   if (el.dataset.lu !== undefined && charState.levelUp) {
     setPath(charState.levelUp, el.dataset.lu, el.value);
     const m = el.dataset.lu.match(/^adv\.(\d)\.id$/);
