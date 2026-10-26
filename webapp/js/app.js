@@ -342,6 +342,34 @@ function domainTags(ids, domains) {
 
 // ---------- Overview page ----------
 
+// The links to the other areas as folders in a filing cabinet drawer. Folders stand one behind
+// another with staggered tabs; hovering or focusing one pulls it up and out of the drawer.
+function renderCabinet(folders) {
+  const tabs = folders.length;
+  return `
+    <section class="cabinet" aria-label="Archive">
+      <div class="drawer">
+        ${folders.map((f, i) => `
+          <a class="folder" href="${f.href}" style="--i:${i};--tab-left:${(i % 3) * 33}%;z-index:${i + 1}">
+            <span class="folder-tab">${escapeHtml(f.tab)}</span>
+            <span class="folder-body">
+              <span class="folder-head">
+                <span class="eyebrow">${escapeHtml(f.file)} · ${escapeHtml(f.count)}</span>
+                <span class="folder-title">${escapeHtml(f.title)} →</span>
+              </span>
+              <span class="link-field-domains">
+                ${f.chips.map(([label, color]) => `<span style="--domain:${color || '#5d5545'}">${escapeHtml(label)}</span>`).join('')}
+              </span>
+            </span>
+          </a>`).join('')}
+      </div>
+      <div class="drawer-front" aria-hidden="true">
+        <span class="drawer-label">HeartCore · ${tabs} files</span>
+        <span class="drawer-handle"></span>
+      </div>
+    </section>`;
+}
+
 async function initOverview() {
   const root = document.getElementById('content');
   renderNav('overview');
@@ -370,57 +398,23 @@ async function initOverview() {
         <h2>Design Pillars</h2>
         <div class="prose">${renderProse(sections['Design Pillars'])}</div>` : ''}
 
-      <h2>Domains</h2>
-      <a class="link-field" href="domains.html">
-        <span class="link-field-title">All domains &amp; cards →</span>
-        <span class="link-field-domains">
-          ${all.map((d, i) => `<span style="--domain:${domainColor(d.id, i)}">${escapeHtml(d.name)}</span>`).join('')}
-        </span>
-        <span class="eyebrow">${plural(total, 'card')}</span>
-      </a>
-
-      <h2>Classes</h2>
-      <a class="link-field" href="classes.html">
-        <span class="link-field-title">All classes →</span>
-        <span class="link-field-domains">
-          ${classes.map(c => `<span style="--domain:#5d5545">${escapeHtml(c.name)}</span>`).join('')}
-        </span>
-        <span class="eyebrow">${classes.length} ${classes.length === 1 ? 'class' : 'classes'}</span>
-      </a>
-
-      <h2>Mechanics</h2>
-      ${rest ? `
-        <a class="link-field" href="rest.html">
-          <span class="link-field-title">Rest →</span>
-          <span class="link-field-domains">
-            ${rest.rests.map(r => `<span style="--domain:#5d5545">${escapeHtml(r.name)} · ${plural(r.actions, 'action')}</span>`).join('')}
-          </span>
-          <span class="eyebrow">${plural(rest.actions.length, 'rest action')}</span>
-        </a>` : ''}
-      ${equipment ? `
-        <a class="link-field" href="equipment.html">
-          <span class="link-field-title">Equipment →</span>
-          <span class="link-field-domains">
-            ${equipment.sections.filter(s => s.items.length).map(s => `<span style="--domain:#5d5545">${escapeHtml(s.name)}</span>`).join('')}
-          </span>
-          <span class="eyebrow">${plural(equipment.sections.reduce((n, s) => n + s.items.length, 0), 'item')}</span>
-        </a>` : ''}
-      ${ailments ? `
-        <a class="link-field" href="ailments.html">
-          <span class="link-field-title">Ailments →</span>
-          <span class="link-field-domains">
-            ${ailments.tables.map(t => `<span style="--domain:${t.color}">${escapeHtml(t.name)}</span>`).join('')}
-          </span>
-          <span class="eyebrow">${plural(ailments.tables.reduce((n, t) => n + t.entries.length, 0), 'ailment')}</span>
-        </a>` : ''}
-      ${rest || equipment || ailments ? '' : '<p class="status">No mechanics yet.</p>'}
-
-      <h2>Play</h2>
-      <a class="link-field" href="characters.html">
-        <span class="link-field-title">Character creator →</span>
-        <span class="link-field-domains"><span style="--domain:#5d5545">Create, track, level up, export</span></span>
-        <span class="eyebrow">saved in your browser</span>
-      </a>
+      <h2>Archive</h2>
+      ${renderCabinet([
+        { href: 'domains.html', tab: 'Domains', file: 'File 01', title: 'All domains & cards', count: plural(total, 'card'),
+          chips: all.map((d, i) => [d.name, domainColor(d.id, i)]) },
+        { href: 'classes.html', tab: 'Classes', file: 'File 02', title: 'All classes', count: `${classes.length} ${classes.length === 1 ? 'class' : 'classes'}`,
+          chips: classes.map(c => [c.name]) },
+        rest && { href: 'rest.html', tab: 'Rest', file: 'File 03', title: 'Short & long rests', count: plural(rest.actions.length, 'rest action'),
+          chips: rest.rests.map(r => [`${r.name} · ${plural(r.actions, 'action')}`]) },
+        equipment && { href: 'equipment.html', tab: 'Equipment', file: 'File 04', title: 'Armor, weapons & consumables',
+          count: plural(equipment.sections.reduce((n, s) => n + s.items.length, 0), 'item'),
+          chips: equipment.sections.filter(s => s.items.length).map(s => [s.name]) },
+        ailments && { href: 'ailments.html', tab: 'Ailments', file: 'File 05', title: 'Physical & Stress ailments',
+          count: plural(ailments.tables.reduce((n, t) => n + t.entries.length, 0), 'ailment'),
+          chips: ailments.tables.map(t => [t.name, t.color]) },
+        { href: 'characters.html', tab: 'Characters', file: 'File 06', title: 'Character creator', count: 'saved in your browser',
+          chips: [['Create, track, level up, export']] },
+      ].filter(Boolean))}
     `;
   } catch (err) {
     showError(root, err);
