@@ -697,3 +697,31 @@ button.trait-tile:hover { border-color: #555; }
 .ailment-block { display: grid; gap: 0.45rem; border-top: 1px solid var(--line); padding-top: 0.6rem; margin-top: 0.2rem; }
 .ailment-block > .eyebrow { color: var(--domain); }
 @media print { .characters-page .sev { background: #fff; } .characters-page .sev-range, .characters-page .ailment-block > .eyebrow { color: #000; } }
+
+/* Clickable severity tiles and the ailment popup. */
+button.sev { text-align: left; color: var(--text); font-family: inherit; cursor: pointer; }
+button.sev:hover { border-color: #555; }
+button.sev.severe:hover { border-color: var(--accent); }
+.popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 50;
+}
+.popup {
+  width: min(520px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  padding: 1.2rem 1.3rem;
+  display: grid;
+  gap: 0.7rem;
+}
+.popup h3 { color: var(--accent); font-weight: normal; font-size: 1.2rem; letter-spacing: 0.04em; }
+.popup p { color: var(--text); font-size: 0.95rem; }
+.ailment-roll strong { font-size: 1.15rem; }
+.ailment-roll.fatal { border-left-color: var(--accent); background: #160606; }

@@ -24,7 +24,8 @@ const ADVANCEMENTS = [
 
 // wizard: null | { type: 'create', step, draft } | { type: 'level', step } (level-up choices live in levelUp).
 // rest: null | { type: 'short' | 'long', picks: [action names], treat, patient, medbay, houseCall }
-const charState = { data: null, chars: [], currentId: null, levelUp: null, wizard: null, rest: null, exportCode: null, notice: '' };
+// popup: null | { title, lines, rolls: [{ table, entry, roll }], offerStressRoll }
+const charState = { data: null, chars: [], currentId: null, levelUp: null, wizard: null, rest: null, popup: null, useArmor: false, exportCode: null, notice: '' };
 
 // ---------- Storage ----------
 
@@ -275,11 +276,14 @@ function renderCore(c, d) {
           <span class="stat"><span class="stat-value">${d.evasion}</span><span class="eyebrow">Evasion</span></span>
           <span class="stat"><span class="stat-value">${d.armorScore}</span><span class="eyebrow">Armor Score</span></span>
         </div>
+        <span class="eyebrow no-print">Took damage? Click its severity.</span>
         <div class="severity">
-          <span class="sev"><span class="eyebrow">Minor · 1 HP</span><span class="sev-range">1–${d.major - 1}</span></span>
-          <span class="sev"><span class="eyebrow">Major · 2 HP</span><span class="sev-range">${d.major}–${d.severe - 1}</span></span>
-          <span class="sev severe"><span class="eyebrow">Severe · 3 HP + ailment</span><span class="sev-range">${d.severe}+</span></span>
+          <button class="sev" data-act="damage" data-hp="1"><span class="eyebrow">Minor · 1 HP</span><span class="sev-range">1–${d.major - 1}</span></button>
+          <button class="sev" data-act="damage" data-hp="2"><span class="eyebrow">Major · 2 HP</span><span class="sev-range">${d.major}–${d.severe - 1}</span></button>
+          <button class="sev severe" data-act="damage" data-hp="3"><span class="eyebrow">Severe · 3 HP + ailment</span><span class="sev-range">${d.severe}+</span></button>
         </div>
+        <label class="check no-print"><input type="checkbox" data-ui="useArmor" ${charState.useArmor ? 'checked' : ''} ${d.armorScore - c.marked.armor > 0 ? '' : 'disabled'}>
+          Mark an Armor Slot to reduce the damage by one level (${Math.max(0, d.armorScore - c.marked.armor)} left)</label>
         <span class="eyebrow">Armor Slots</span>
         ${track('armor', d.armorScore, Math.min(c.marked.armor, d.armorScore))}
         <span class="eyebrow">Hit Points · ${c.marked.hp} / ${d.hpMax} marked</span>
@@ -290,7 +294,8 @@ function renderCore(c, d) {
         <h3>Mind</h3>
         <span class="eyebrow">Stress · ${c.marked.stress} / ${d.stressMax} marked</span>
         ${track('stress', d.stressMax, c.marked.stress)}
-        ${d.stressMax && c.marked.stress >= d.stressMax ? '<p class="warn">Stress maxed: roll on the Stress ailment table.</p>' : ''}
+        <div class="no-print"><button class="btn primary" data-act="add-stress">Mark 1 Stress</button></div>
+        ${d.stressMax && c.marked.stress >= d.stressMax ? '<p class="warn">Stress maxed: further Stress is marked as HP.</p>' : ''}
         ${renderAilmentList(c, 'stress')}
       </div>
       <div class="panel">
@@ -1093,9 +1098,110 @@ function renderSheet() {
     ${renderNotes(c)}`;
 }
 
+// ---------- Damage, Stress and ailment rolls ----------
+
+const rollD12 = () => 1 + Math.floor(Math.random() * 12);
+
+// Roll on an ailment table; rerolls ailments the character already has (except the final result 12).
+function rollAilment(c, tableId) {
+  const table = charState.data.ailments.tables.find(t => t.id === tableId);
+  if (!table) return null;
+  for (let tries = 0; tries < 50; tries++) {
+    const roll = rollD12();
+    const entry = table.entries.find(e => e.roll === roll);
+    if (!entry) continue;
+    if (roll !== 12 && c.ailments.some(a => a.table === tableId && a.name === entry.name)) continue;
+    c.ailments.push({ table: tableId, name: entry.name });
+    if (entry.name === 'Hopeless') c.hope = 0;
+    return { table, entry, roll };
+  }
+  return null;
+}
+
+// Mark HP; returns lines for the popup (e.g. death move).
+function markHp(c, amount) {
+  const d = derive(c);
+  const before = c.marked.hp;
+  c.marked.hp = Math.min(d.hpMax, c.marked.hp + amount);
+  const lines = [];
+  if (c.marked.hp >= d.hpMax && before < d.hpMax) lines.push('You marked your last Hit Point: make a death move (Blaze of Glory, Avoid Death or Risk It All).');
+  else if (before >= d.hpMax && amount > 0) lines.push('You have no Hit Points left to mark.');
+  return lines;
+}
+
+function takeDamage(c, hp) {
+  const d = derive(c);
+  let level = hp;
+  const lines = [];
+  if (charState.useArmor && d.armorScore - c.marked.armor > 0) {
+    c.marked.armor += 1;
+    level -= 1;
+    lines.push(`You marked an Armor Slot: the damage drops to ${['none', 'Minor', 'Major'][level]}.`);
+  }
+  charState.useArmor = false;
+  if (level > 0) lines.push(`You mark ${plural(level, 'HP')}.`);
+  lines.push(...markHp(c, level));
+  const rolls = [];
+  if (level >= 3) {
+    const result = rollAilment(c, 'physical');
+    if (result) rolls.push(result);
+  }
+  if (rolls.length || lines.some(l => l.startsWith('You marked your last'))) {
+    charState.popup = { title: level >= 3 ? 'Severe damage' : 'Hit Points', lines, rolls };
+  } else {
+    charState.notice = lines.join(' ');
+  }
+}
+
+function addStress(c) {
+  const d = derive(c);
+  if (c.marked.stress >= d.stressMax) {
+    const lines = ['Your Stress is maxed: the Stress is marked as 1 HP instead.', ...markHp(c, 1)];
+    if (lines.length > 1) charState.popup = { title: 'Stress overflow', lines, rolls: [] };
+    else charState.notice = lines[0];
+    return;
+  }
+  c.marked.stress += 1;
+  if (c.marked.stress < d.stressMax) return;
+  // Last Stress slot marked: Stress ailment (the Soldier's Adrenaline suppresses it).
+  if (d.cls?.id === 'soldier') {
+    charState.popup = {
+      title: 'Stress maxed',
+      lines: ['Adrenaline kicks in: the Stress ailment is suppressed. Roll it when Adrenaline ends (end of scene or Stress reduced).'],
+      rolls: [],
+      offerStressRoll: true,
+    };
+    return;
+  }
+  const result = rollAilment(c, 'stress');
+  charState.popup = { title: 'Stress maxed', lines: ['You marked your last Stress slot.'], rolls: result ? [result] : [] };
+}
+
+function renderPopup() {
+  const p = charState.popup;
+  if (!p) return '';
+  return `
+    <div class="popup-backdrop no-print">
+      <div class="popup" role="dialog" aria-modal="true">
+        <h3>${escapeHtml(p.title)}</h3>
+        ${p.lines.map(l => `<p>${escapeHtml(l)}</p>`).join('')}
+        ${p.rolls.map(({ table, entry, roll }) => `
+          <div class="mini-card ailment-roll${roll === 12 ? ' fatal' : ''}" style="--domain:${table.color}">
+            <div><span class="eyebrow">${escapeHtml(table.name)} · d12 rolled ${roll}</span></div>
+            <div><strong>${escapeHtml(entry.name)}</strong> <span class="tag">${escapeHtml(LASTS_LABELS[entry.lasts] || entry.lasts || '')}</span></div>
+            <ul class="features">${lines(entry.text)}</ul>
+          </div>`).join('')}
+        <div class="btn-row">
+          ${p.offerStressRoll ? '<button class="btn" data-act="roll-stress-ailment">Adrenaline ended: roll the Stress ailment</button>' : ''}
+          <button class="btn primary" data-act="popup-close">OK</button>
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderCharacters() {
   document.getElementById('sidebar').innerHTML = renderCharSidebar();
-  document.getElementById('content').innerHTML = renderSheet();
+  document.getElementById('content').innerHTML = renderSheet() + renderPopup();
 }
 
 function commit({ rerender = true } = {}) {
@@ -1235,6 +1341,20 @@ function handleClick(e) {
       charState.rest = null;
       startLevelWizard();
       return renderCharacters();
+    case 'damage':
+      takeDamage(c, Number(btn.dataset.hp));
+      break;
+    case 'add-stress':
+      addStress(c);
+      break;
+    case 'roll-stress-ailment': {
+      const result = rollAilment(c, 'stress');
+      charState.popup = { title: 'Stress ailment', lines: ['Adrenaline has ended.'], rolls: result ? [result] : [] };
+      break;
+    }
+    case 'popup-close':
+      charState.popup = null;
+      return renderCharacters();
     case 'rest-start':
       charState.rest = { type: btn.dataset.type, picks: [], treat: '', patient: false, medbay: false, houseCall: '' };
       return renderCharacters();
@@ -1269,6 +1389,10 @@ function handleChange(e) {
   if (!c) return;
   // Text fields are saved by handleInput; re-rendering on blur would swallow the next click.
   if (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && el.type !== 'checkbox')) return;
+  if (el.dataset.ui !== undefined) {
+    charState[el.dataset.ui] = readValue(el);
+    return;
+  }
   if (el.dataset.rest !== undefined && charState.rest) {
     charState.rest[el.dataset.rest] = readValue(el);
     return renderCharacters();
