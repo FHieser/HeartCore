@@ -204,7 +204,7 @@ function featureBlock(label, f) {
     <div class="mini-card" style="--domain:var(--accent)">
       <div><span class="eyebrow">${escapeHtml(label)}</span> <strong>${escapeHtml(f.name || 'Unnamed')}</strong>${f.cost != null ? ` <span class="tag">◆ ${f.cost} Hope</span>` : ''}</div>
       <ul class="features">${lines(f.text)}</ul>
-      ${f.options?.length ? `<ul class="options">${f.options.map(o => typeof o === 'string' ? `<li>${escapeHtml(o)}</li>` : `<li><strong>${escapeHtml(o.name || '')}</strong> ${highlightRules(escapeHtml(o.text || ''))}</li>`).join('')}</ul>` : ''}
+      ${f.options?.length ? foldList(plural(f.options.length, 'option'), `<ul class="options">${f.options.map(o => typeof o === 'string' ? `<li>${escapeHtml(o)}</li>` : `<li><strong>${escapeHtml(o.name || '')}</strong> ${highlightRules(escapeHtml(o.text || ''))}</li>`).join('')}</ul>`) : ''}
     </div>`;
 }
 

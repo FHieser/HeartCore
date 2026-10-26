@@ -503,6 +503,21 @@ function glossarize(html) {
       : `<abbr class="term" title="${escapeHtml(GLOSSARY_MAP[m])}" tabindex="0">${m}</abbr>`)))).join('');
 }
 
+// Printing (e.g. the character sheet PDF) unfolds every folded list and collapsible section.
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('beforeprint', () => document.querySelectorAll('details').forEach(d => { d.open = true; }));
+}
+
+// A long list inside a card, folded shut like a sheet of paper; click the fold line to unfold it.
+// label is plain text (escaped here); content is ready HTML.
+function foldList(label, content) {
+  return `
+    <details class="fold">
+      <summary><span class="fold-label">${escapeHtml(label)}</span></summary>
+      <div class="fold-content">${content}</div>
+    </details>`;
+}
+
 // Small stat chip (used with icons: ↺ Recall, ▢ slots, ◆ Hope).
 const chip = text => `<span class="tag">${escapeHtml(text)}</span>`;
 
@@ -718,9 +733,9 @@ function renderFeature(cls, [kind, label]) {
       <header><h4>${escapeHtml(f.name || 'Unnamed')}</h4></header>
       <div class="card-stats">${stats.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
       <ul class="features">${f.text.map(t => `<li>${highlightRules(escapeHtml(t))}</li>`).join('')}</ul>
-      ${options.length ? `<ul class="options">${options.map(o => `
+      ${options.length ? foldList(plural(options.length, 'option'), `<ul class="options">${options.map(o => `
         <li>${o.name ? `<strong>${escapeHtml(o.name)}</strong> ` : ''}${highlightRules(escapeHtml(o.text || ''))}</li>`).join('')}
-      </ul>` : ''}
+      </ul>`) : ''}
     </article>`;
 }
 
@@ -833,11 +848,10 @@ const equipmentId = (section, item) => `${section.id}-${slug(item.name || 'item'
 function featureList(label, features) {
   const list = asList(features);
   if (!list.length) return '';
-  return `
-    <p class="eyebrow">${escapeHtml(label)}</p>
+  return foldList(`${label} · ${list.length}`, `
     <ul class="options">${list.map(f => `
       <li><strong>${escapeHtml(f.name || '')}</strong> ${highlightRules(escapeHtml(f.text || ''))}</li>`).join('')}
-    </ul>`;
+    </ul>`);
 }
 
 function renderEquipmentItem(section, item) {
