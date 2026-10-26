@@ -25,7 +25,7 @@ const ADVANCEMENTS = [
 // wizard: null | { type: 'create', step, draft } | { type: 'level', step } (level-up choices live in levelUp).
 // rest: null | { type: 'short' | 'long', picks: [action names], treat, patient, medbay, houseCall }
 // popup: null | { title, lines, rolls: [{ table, entry, roll }], offerStressRoll }
-const charState = { data: null, chars: [], currentId: null, levelUp: null, wizard: null, rest: null, popup: null, useArmor: false, exportCode: null, notice: '' };
+const charState = { data: null, chars: [], currentId: null, levelUp: null, wizard: null, rest: null, popup: null, useArmor: false, sheetTab: 'traits', exportCode: null, notice: '' };
 
 // ---------- Storage ----------
 
@@ -202,7 +202,7 @@ function featureBlock(label, f) {
   if (!f || (!f.name && !f.text?.length)) return '';
   return `
     <div class="mini-card" style="--domain:var(--accent)">
-      <div><span class="eyebrow">${escapeHtml(label)}</span> <strong>${escapeHtml(f.name || 'Unnamed')}</strong>${f.cost != null ? ` <span class="tag">${f.cost} Hope</span>` : ''}</div>
+      <div><span class="eyebrow">${escapeHtml(label)}</span> <strong>${escapeHtml(f.name || 'Unnamed')}</strong>${f.cost != null ? ` <span class="tag">◆ ${f.cost} Hope</span>` : ''}</div>
       <ul class="features">${lines(f.text)}</ul>
       ${f.options?.length ? `<ul class="options">${f.options.map(o => typeof o === 'string' ? `<li>${escapeHtml(o)}</li>` : `<li><strong>${escapeHtml(o.name || '')}</strong> ${highlightRules(escapeHtml(o.text || ''))}</li>`).join('')}</ul>` : ''}
     </div>`;
@@ -269,7 +269,7 @@ function renderAilmentList(c, tableId) {
 
 function renderCore(c, d) {
   return `
-    <div class="sheet-grid core-grid">
+    <div class="vitals-stack">
       <div class="panel body-panel">
         <h3>Body</h3>
         <div class="class-stats">
@@ -392,8 +392,8 @@ function renderCards(c, d) {
               <div><strong>${escapeHtml(card.name)}</strong>
                 <span class="tag">${escapeHtml(card.owner === HCORE.id ? card.type : domainName(card.owner))}</span>
                 ${card.source?.level != null ? `<span class="tag">Level ${card.source.level}</span>` : ''}
-                <span class="tag">${plural(card.slots ?? 1, 'slot')}</span>
-                <span class="tag">Recall ${card.recall ?? 0}</span>
+                <span class="tag">▢ ${plural(card.slots ?? 1, 'slot')}</span>
+                <span class="tag">↺ Recall ${card.recall ?? 0}</span>
                 ${entry.vaulted ? '<span class="tag">Vault</span>' : ''}
               </div>
               <ul class="features">${lines(card.text)}</ul>
@@ -711,8 +711,8 @@ function pickCard(card, selected, act) {
       <span class="pick-head"><strong>${escapeHtml(card.name)}</strong>
         <span class="tag">${escapeHtml(domainName(card.owner))}</span>
         ${card.source?.level != null ? `<span class="tag">Level ${card.source.level}</span>` : ''}
-        <span class="tag">${plural(card.slots ?? 1, 'slot')}</span>
-        <span class="tag">Recall ${card.recall ?? 0}</span></span>
+        <span class="tag">▢ ${plural(card.slots ?? 1, 'slot')}</span>
+        <span class="tag">↺ Recall ${card.recall ?? 0}</span></span>
       <ul class="features">${lines(card.text)}</ul>
     </button>`;
 }
@@ -1083,19 +1083,45 @@ function renderSheet() {
       </section>`;
   }
   const d = derive(c);
+  // Dashboard: vitals on the left (sticky), everything else in tabs on the right.
+  // All tab panels are rendered; inactive ones are hidden (print shows them all).
+  const tab = SHEET_TABS.some(([id]) => id === charState.sheetTab) ? charState.sheetTab : SHEET_TABS[0][0];
+  const panels = {
+    traits: `<div class="sheet-grid">${renderTraits(c, d)}${renderExperiences(c)}</div>`,
+    features: renderClassFeatures(c, d),
+    cards: renderCards(c, d),
+    gear: renderEquipment(c, d),
+    notes: renderNotes(c),
+  };
   return `
-    ${charState.notice ? `<p class="warn">${escapeHtml(charState.notice)}</p>` : ''}
     ${renderHeader(c, d)}
     ${renderRest(c)}
-    ${renderCore(c, d)}
-    <div class="sheet-grid">
-      ${renderTraits(c, d)}
-      ${renderExperiences(c)}
-    </div>
-    <div class="sheet-grid">${renderClassFeatures(c, d)}</div>
-    ${renderCards(c, d)}
-    ${renderEquipment(c, d)}
-    ${renderNotes(c)}`;
+    <div class="dashboard">
+      <aside class="vitals" aria-label="Vitals">${renderCore(c, d)}</aside>
+      <section class="sheet-main">
+        <div class="sheet-tabs no-print" role="tablist">
+          ${SHEET_TABS.map(([id, label]) => `<button role="tab" class="sheet-tab${id === tab ? ' current' : ''}" aria-selected="${id === tab}" data-act="tab" data-tab="${id}">${label}</button>`).join('')}
+        </div>
+        ${SHEET_TABS.map(([id]) => `<div class="tab-panel" role="tabpanel" ${id === tab ? '' : 'hidden'}>${panels[id]}</div>`).join('')}
+      </section>
+    </div>`;
+}
+
+const SHEET_TABS = [['traits', 'Traits'], ['features', 'Features'], ['cards', 'Cards'], ['gear', 'Equipment'], ['notes', 'Notes']];
+
+// Short-lived message at the bottom of the screen (rest summaries, save problems, …).
+function showToast(message) {
+  let toast = document.querySelector('.toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toast no-print';
+    toast.setAttribute('role', 'status');
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove('show'), 5000);
 }
 
 // ---------- Damage, Stress and ailment rolls ----------
@@ -1202,6 +1228,10 @@ function renderPopup() {
 function renderCharacters() {
   document.getElementById('sidebar').innerHTML = renderCharSidebar();
   document.getElementById('content').innerHTML = renderSheet() + renderPopup();
+  if (charState.notice && typeof document.createElement === 'function') {
+    showToast(charState.notice);
+    charState.notice = '';
+  }
 }
 
 function commit({ rerender = true } = {}) {
@@ -1352,6 +1382,9 @@ function handleClick(e) {
       charState.popup = { title: 'Stress ailment', lines: ['Adrenaline has ended.'], rolls: result ? [result] : [] };
       break;
     }
+    case 'tab':
+      charState.sheetTab = btn.dataset.tab;
+      return renderCharacters();
     case 'popup-close':
       charState.popup = null;
       return renderCharacters();

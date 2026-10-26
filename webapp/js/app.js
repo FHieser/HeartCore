@@ -303,12 +303,23 @@ function domainColor(id, index = 0) {
 
 // ---------- Shared chrome ----------
 
+const NAV = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['mechanics', 'rest.html', 'Mechanics'], ['characters', 'characters.html', 'Characters']];
+const MECHANICS_NAV = [['rest', 'rest.html', 'Rest'], ['equipment', 'equipment.html', 'Equipment'], ['ailments', 'ailments.html', 'Ailments']];
+
+// Top tabs; the three mechanics pages share the "Mechanics" tab and get a sub-tab bar.
 function renderNav(current) {
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
-  nav.innerHTML = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['rest', 'rest.html', 'Rest'], ['equipment', 'equipment.html', 'Equipment'], ['ailments', 'ailments.html', 'Ailments'], ['characters', 'characters.html', 'Characters']]
-    .map(([id, href, label]) => `<a href="${href}" class="${id === current ? 'current' : ''}">${label}</a>`)
+  const inMechanics = MECHANICS_NAV.some(([id]) => id === current);
+  nav.innerHTML = NAV
+    .map(([id, href, label]) => `<a href="${href}" class="${id === current || (id === 'mechanics' && inMechanics) ? 'current' : ''}">${label}</a>`)
     .join('');
+  if (inMechanics && !document.querySelector('.sub-nav')) {
+    document.querySelector('.site-header').insertAdjacentHTML('afterend', `
+      <nav class="sub-nav" aria-label="Mechanics">
+        ${MECHANICS_NAV.map(([id, href, label]) => `<a href="${href}" class="${id === current ? 'current' : ''}">${label}</a>`).join('')}
+      </nav>`);
+  }
 }
 
 function showError(el, err) {
@@ -460,12 +471,53 @@ function renderRing(domains, classes) {
   return `<div class="ring">${cells.join('')}</div>`;
 }
 
-// Highlight costs and frequencies in card text. Input must be escaped.
+// Rules terms explained on hover. Order matters: longer terms first.
+const GLOSSARY = [
+  ['Help an Ally', 'Spend 1 Hope to add a d6 to an ally\'s roll.'],
+  ['Recall Cost', 'Stress you mark to bring a card back from the vault mid-scene. Free during a rest.'],
+  ['Very Close', 'Range: a few steps away.'],
+  ['Very Far', 'Range: across a large space, at the edge of what you can reach.'],
+  ['Melee', 'Range: within arm\'s reach.'],
+  ['Close', 'Range: across a room.'],
+  ['Far', 'Range: across a large room or a street.'],
+  ['Vulnerable', 'Rolls against you have advantage. You become Vulnerable when your Stress is maxed.'],
+  ['Restrained', 'You can\'t move, but you can still act.'],
+  ['Hidden', 'Out of sight: rolls against you have disadvantage until you\'re found or reveal yourself.'],
+  ['temporarily', 'A temporary condition holds until it\'s cleared; the GM can spend Fear to clear it from an adversary.'],
+  ['temporary', 'A temporary condition holds until it\'s cleared; the GM can spend Fear to clear it from an adversary.'],
+  ['disadvantage', 'Subtract a d6 from the roll.'],
+  ['Disadvantage', 'Subtract a d6 from the roll.'],
+  ['advantage', 'Add a d6 to the roll.'],
+  ['Advantage', 'Add a d6 to the roll.'],
+  ['spotlight', 'The moment the scene focuses on your character and you act.'],
+  ['vault', 'Where cards go when they aren\'t in your loadout. Vaulted cards can\'t be used.'],
+  ['loadout', 'Your active cards: up to 5 slots.'],
+  ['Fear', 'The GM\'s resource, used for GM moves and to make adversaries stronger.'],
+];
+const GLOSSARY_RE = new RegExp(`\\b(${GLOSSARY.map(([t]) => t).join('|')})\\b`, 'g');
+const GLOSSARY_MAP = Object.fromEntries(GLOSSARY);
+
+// Wrap glossary terms in text (never inside HTML tags). Input must be escaped HTML.
+// Range words only count as ranges after "within" or before "range" ("Close the door" stays plain).
+const RANGE_TERMS = new Set(['Very Close', 'Very Far', 'Melee', 'Close', 'Far']);
+const isRangeUse = (text, offset, term) => /within\s*$/i.test(text.slice(0, offset)) || /^\s+range/i.test(text.slice(offset + term.length));
+
+function glossarize(html) {
+  return html.split(/(<[^>]+>)/).map(part => (part.startsWith('<') ? part
+    : part.replace(GLOSSARY_RE, (m, _term, offset, text) => (RANGE_TERMS.has(m) && !isRangeUse(text, offset, m)
+      ? m
+      : `<abbr class="term" title="${escapeHtml(GLOSSARY_MAP[m])}" tabindex="0">${m}</abbr>`)))).join('');
+}
+
+// Small stat chip (used with icons: ↺ Recall, ▢ slots, ◆ Hope).
+const chip = text => `<span class="tag">${escapeHtml(text)}</span>`;
+
+// Highlight costs and frequencies in card text and explain rules terms. Input must be escaped.
 function highlightRules(s) {
-  return s.replace(
+  return glossarize(s.replace(
     /\b((?:Mark|Spend|Clear|Gain) \d+ (?:Stress|Hope|HP|Armor Slots?|Fear)|Once per (?:long rest|short rest|rest|scene|session)|\d+ uses? per (?:long rest|short rest|rest|scene)|Passive|One-shot)\b/g,
     '<span class="kw">$1</span>'
-  );
+  ));
 }
 
 const cardId = (domainId, card) => `${domainId}-${slug(card.name || 'unnamed')}`;
@@ -477,14 +529,15 @@ function renderCard(card, domainId) {
   const stats = [
     card.type,
     src.kind === 'domain' && src.level != null ? `Level ${src.level}` : null,
-    plural(slots, 'slot'),
-    card.recall != null ? `Recall ${card.recall}` : null,
+    `▢ ${plural(slots, 'slot')}`,
+    card.recall != null ? `↺ Recall ${card.recall}` : null,
   ].filter(v => v != null);
   const text = Array.isArray(card.text) ? card.text : card.text ? [card.text] : [];
+  const search = [card.name, card.type, ...text, card.flavor].filter(Boolean).join(' ').toLowerCase();
   return `
-    <article class="game-card" id="${cardId(domainId, card)}">
+    <article class="game-card" id="${cardId(domainId, card)}" data-level="${src.level ?? ''}" data-type="${escapeHtml(card.type || '')}" data-search="${escapeHtml(search)}">
       <header><h4>${escapeHtml(card.name || 'Unnamed')}</h4></header>
-      <div class="card-stats">${stats.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
+      <div class="card-stats">${stats.map(chip).join('')}</div>
       <ul class="features">${text.map(t => `<li>${highlightRules(escapeHtml(t))}</li>`).join('')}</ul>
       ${card.flavor ? `<p class="flavor">“${escapeHtml(card.flavor)}”</p>` : ''}
     </article>`;
@@ -507,7 +560,8 @@ function groupCards(cards) {
 function renderHcoreGuidelines(hcore) {
   if (!hcore || (!hcore.rules.length && !hcore.types.length)) return '';
   return `
-    <div class="class-notes hcore-guidelines">
+    <details class="class-notes hcore-guidelines">
+      <summary>Guidelines for HCore cards</summary>
       ${hcore.rules.length ? `<p class="eyebrow">Guidelines</p>
         <ul>${hcore.rules.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>` : ''}
       ${hcore.types.length ? `<p class="eyebrow">Types</p>
@@ -517,7 +571,7 @@ function renderHcoreGuidelines(hcore) {
             ${t.slots ? `<br><span class="eyebrow">Slots</span> ${escapeHtml(t.slots)}` : ''}
             ${t.price ? `<br><span class="eyebrow">Price</span> ${escapeHtml(t.price)}` : ''}
           </li>`).join('')}</ul>` : ''}
-    </div>`;
+    </details>`;
 }
 
 function renderDomainSection({ domain, groups, color }, classes, hcore) {
@@ -600,8 +654,21 @@ async function initDomains() {
             </li>`).join('')}
         </ul>
       </section>
+      <div class="filter-bar" role="search">
+        <input class="field" type="search" placeholder="Search cards…" data-filter="q" aria-label="Search cards">
+        <select class="field" data-filter="level" aria-label="Level">
+          <option value="">All levels</option>${[1, 2, 3, 4].map(l => `<option value="${l}">Level ${l}</option>`).join('')}
+        </select>
+        <select class="field" data-filter="type" aria-label="Type">
+          <option value="">All types</option>${['ability', 'item', 'artifact', 'curse'].map(t => `<option value="${t}">${t[0].toUpperCase() + t.slice(1)}</option>`).join('')}
+        </select>
+        <label class="check"><input type="checkbox" data-filter="compact"> Compact</label>
+        <span class="eyebrow filter-count" aria-live="polite"></span>
+      </div>
       ${entries.map(e => renderDomainSection(e, classes, hcore)).join('')}
+      <p class="status filter-empty" hidden>No cards match.</p>
     `;
+    setupCardFilters(root);
 
     watchSections(sidebar);
     if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
@@ -610,13 +677,47 @@ async function initDomains() {
   }
 }
 
+// Search / level / type filters and the compact view on the Domains page.
+function setupCardFilters(root) {
+  const bar = root.querySelector('.filter-bar');
+  const field = key => bar.querySelector(`[data-filter="${key}"]`);
+  const apply = () => {
+    const q = field('q').value.trim().toLowerCase();
+    const level = field('level').value;
+    const type = field('type').value;
+    root.classList.toggle('compact', field('compact').checked);
+    let shown = 0;
+    root.querySelectorAll('.game-card').forEach(card => {
+      const ok = (!q || card.dataset.search.includes(q))
+        && (!level || card.dataset.level === level)
+        && (!type || card.dataset.type === type);
+      card.hidden = !ok;
+      if (ok) shown += 1;
+    });
+    // Hide level headings and sections that have nothing left.
+    root.querySelectorAll('.cards').forEach(grid => {
+      const empty = ![...grid.children].some(c => !c.hidden);
+      grid.hidden = empty;
+      if (grid.previousElementSibling?.classList.contains('level-head')) grid.previousElementSibling.hidden = empty;
+    });
+    const filtering = Boolean(q || level || type);
+    root.querySelectorAll('.domain-section').forEach(sec => {
+      sec.hidden = filtering && ![...sec.querySelectorAll('.game-card')].some(c => !c.hidden);
+    });
+    bar.querySelector('.filter-count').textContent = filtering ? `${shown} shown` : '';
+    root.querySelector('.filter-empty').hidden = shown > 0;
+  };
+  bar.addEventListener('input', apply);
+  bar.addEventListener('change', apply);
+}
+
 // ---------- Classes page ----------
 
 const featureId = (cls, kind) => `${cls.id}-${kind}`;
 
 function renderFeature(cls, [kind, label]) {
   const f = cls.features[kind];
-  const stats = [label, f.cost != null ? `${f.cost} Hope` : null].filter(Boolean);
+  const stats = [label, f.cost != null ? `◆ ${f.cost} Hope` : null].filter(Boolean);
   const options = f.options.map(o => typeof o === 'string' ? { text: o } : o);
   return `
     <article class="game-card" id="${featureId(cls, kind)}">
@@ -657,8 +758,8 @@ function renderClassSection(cls, domains) {
       ${cls.loop || cls.open.length ? `
         <div class="class-notes">
           ${cls.loop ? `<p><span class="eyebrow">Loop</span> ${escapeHtml(cls.loop)}</p>` : ''}
-          ${cls.open.length ? `<p class="eyebrow">Open</p>
-            <ul>${cls.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>` : ''}
+          ${cls.open.length ? `<details><summary>Open points (${cls.open.length})</summary>
+            <ul>${cls.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul></details>` : ''}
         </div>` : ''}
     </section>`;
 }
@@ -809,9 +910,9 @@ async function initEquipment() {
         </section>`).join('')}
 
       ${e.open.length ? `
-        <div class="class-notes ailment-notes">
-          <p class="eyebrow">Open</p><ul>${e.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>
-        </div>` : ''}
+        <details class="class-notes ailment-notes">
+          <summary>Open points (${e.open.length})</summary><ul>${e.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>
+        </details>` : ''}
     `;
 
     watchSections(sidebar);
@@ -857,10 +958,11 @@ async function initRest() {
       <div class="cards">${r.actions.map(renderRestAction).join('')}</div>
 
       ${r.notes.length || r.open.length ? `
-        <div class="class-notes ailment-notes">
+        <details class="class-notes ailment-notes">
+          <summary>Notes &amp; open points</summary>
           ${r.notes.length ? `<p class="eyebrow">Notes</p><ul>${r.notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>` : ''}
           ${r.open.length ? `<p class="eyebrow">Open</p><ul>${r.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>` : ''}
-        </div>` : ''}
+        </details>` : ''}
     `;
   } catch (err) {
     showError(root, err);
@@ -921,10 +1023,11 @@ async function initAilments() {
       ${a.tables.map(renderAilmentSection).join('')}
 
       ${notes.length || a.open.length ? `
-        <div class="class-notes ailment-notes">
+        <details class="class-notes ailment-notes">
+          <summary>Notes &amp; open points</summary>
           ${notes.length ? `<p class="eyebrow">Notes</p><ul>${notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>` : ''}
           ${a.open.length ? `<p class="eyebrow">Open</p><ul>${a.open.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>` : ''}
-        </div>` : ''}
+        </details>` : ''}
     `;
 
     watchSections(sidebar);
