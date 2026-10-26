@@ -8,13 +8,13 @@
 const DATA_ROOT = '../';
 
 const DOMAIN_COLORS = {
-  body: '#d0453a',
-  mind: '#9a6bdc',
-  tech: '#3ba7c4',
-  aid: '#4fae6a',
-  hcore: '#c9a13b',
+  body: '#b3392e',
+  mind: '#6e4aa8',
+  tech: '#1f6f8b',
+  aid: '#2f7a45',
+  hcore: '#8a6416',
 };
-const FALLBACK_COLORS = ['#d07f3a', '#c24f8f', '#7c8fd6', '#8fae3b'];
+const FALLBACK_COLORS = ['#a8581f', '#9c3a6e', '#4a5fa8', '#5f7a1f'];
 
 // HCore cards: extraordinary cards outside the domains. Name and summary come from data/hcore/hcore.yaml.
 const HCORE = {
@@ -212,8 +212,8 @@ async function loadCards(id) {
 
 // Ailments: rules plus the physical and stress d12 tables (data/mechanics/ailments.yaml).
 const AILMENT_TABLES = [
-  { id: 'physical', color: '#d0453a' },
-  { id: 'stress', color: '#9a6bdc' },
+  { id: 'physical', color: '#b3392e' },
+  { id: 'stress', color: '#6e4aa8' },
 ];
 const LASTS_LABELS = {
   instant: 'Instant',
@@ -372,7 +372,7 @@ async function initOverview() {
       <a class="link-field" href="classes.html">
         <span class="link-field-title">All classes →</span>
         <span class="link-field-domains">
-          ${classes.map(c => `<span style="--domain:#9a9a9a">${escapeHtml(c.name)}</span>`).join('')}
+          ${classes.map(c => `<span style="--domain:#5d5545">${escapeHtml(c.name)}</span>`).join('')}
         </span>
         <span class="eyebrow">${classes.length} ${classes.length === 1 ? 'class' : 'classes'}</span>
       </a>
@@ -382,7 +382,7 @@ async function initOverview() {
         <a class="link-field" href="rest.html">
           <span class="link-field-title">Rest →</span>
           <span class="link-field-domains">
-            ${rest.rests.map(r => `<span style="--domain:#9a9a9a">${escapeHtml(r.name)} · ${plural(r.actions, 'action')}</span>`).join('')}
+            ${rest.rests.map(r => `<span style="--domain:#5d5545">${escapeHtml(r.name)} · ${plural(r.actions, 'action')}</span>`).join('')}
           </span>
           <span class="eyebrow">${plural(rest.actions.length, 'rest action')}</span>
         </a>` : ''}
@@ -390,7 +390,7 @@ async function initOverview() {
         <a class="link-field" href="equipment.html">
           <span class="link-field-title">Equipment →</span>
           <span class="link-field-domains">
-            ${equipment.sections.filter(s => s.items.length).map(s => `<span style="--domain:#9a9a9a">${escapeHtml(s.name)}</span>`).join('')}
+            ${equipment.sections.filter(s => s.items.length).map(s => `<span style="--domain:#5d5545">${escapeHtml(s.name)}</span>`).join('')}
           </span>
           <span class="eyebrow">${plural(equipment.sections.reduce((n, s) => n + s.items.length, 0), 'item')}</span>
         </a>` : ''}
@@ -407,7 +407,7 @@ async function initOverview() {
       <h2>Play</h2>
       <a class="link-field" href="characters.html">
         <span class="link-field-title">Character creator →</span>
-        <span class="link-field-domains"><span style="--domain:#9a9a9a">Create, track, level up, export</span></span>
+        <span class="link-field-domains"><span style="--domain:#5d5545">Create, track, level up, export</span></span>
         <span class="eyebrow">saved in your browser</span>
       </a>
     `;

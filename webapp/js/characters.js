@@ -428,7 +428,7 @@ function renderWeapon(c, w, i) {
   const stats = cat ? [cat.trait, cat.range, cat.damage, cat.burden].filter(Boolean).join(' · ') : '';
   const chosen = [...features.filter(f => w.features.includes(f.name)), ...asList(cat?.utility_features).filter(f => f.name === w.utility)];
   return `
-    <div class="mini-card" style="--domain:#9a9a9a">
+    <div class="mini-card" style="--domain:#5d5545">
       <div class="exp-row">
         <input class="field" data-field="weapons.${i}.name" value="${escapeHtml(w.name)}" placeholder="Name, e.g. Grandpa's revolver">
         <button class="btn no-print" data-act="weapon-remove" data-i="${i}">Remove</button>
