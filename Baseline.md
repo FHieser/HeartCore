@@ -4,20 +4,14 @@
 
 A modern horror hack for the Daggerheart TTRPG, set somewhere in the SCP-like / modern sci-fi space. Characters can be trained professionals (containment staff, security, researchers) **or** ordinary people thrown into anomalous situations. Both use the same classes; only their Experiences and starting gear differ.
 
+**Recovery is slow**: wounds and fear carry over from scene to scene. **Anyone can be here**: domains describe what kind of person you are, not your job, and classes are archetypes, not professions. **The power ceiling stays low**: domain cards only go to level 4, so players never outgrow the horror.
+
 > Status: early design draft. Items marked **(open)** are undecided.
 >
 > Where things live:
 > - Classes: `data/classes/` (format and creation workflow: `.claude/create-class.md`)
 > - Domain and HCore cards: `data/domains/`, `data/hcore/` (format and workflow: `.claude/create-domain-cards.md`)
 > - Detailed mechanics (rest, ailments, equipment, …): `data/mechanics/`, indexed in [Mechanics.md](Mechanics.md)
-
----
-
-## Design Pillars
-
-- **Scarcity.** Recovery is slow; wounds and fear carry over.
-- **Anyone can be here.** Domains describe what kind of person you are, not your job. Classes are archetypes, not professions.
-- **Low power ceiling.** Domain cards only go to level 4. Players never outgrow the horror.
 
 ---
 
