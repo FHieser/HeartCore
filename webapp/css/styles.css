@@ -997,9 +997,11 @@ details.class-notes[open] { gap: 0.6rem; }
 /* Every folder body is --fh tall; consecutive folders start --gap apart, so only the tab and a
    thin edge of each folder show. The contents sit below that edge, hidden behind the next folder.
    Pulling a folder (hover/focus) lifts it by --lift without changing the stacking order: folders
-   in front (and the drawer front) still cover its lower part, as they would physically. */
+   in front (and the drawer front) still cover its lower part, as they would physically.
+   --lift must exceed contents height + tab height (--tab), so the contents end above the tab of
+   the folder in front; --fh must be at least --gap + --lift, so no gap opens below a lifted folder. */
 
-.cabinet { --fh: 7.2rem; --gap: 2.5rem; --lift: 4.5rem; max-width: 860px; margin: 1.5rem auto 0; padding-top: var(--lift); }
+.cabinet { --tab: 1.8rem; --gap: 2.5rem; --lift: 6.8rem; --fh: 9.8rem; max-width: 860px; margin: 1.5rem auto 0; padding-top: var(--lift); }
 .drawer {
   position: relative;
   padding: 2.2rem 1.4rem 0;
@@ -1019,10 +1021,10 @@ details.class-notes[open] { gap: 0.6rem; }
 .folder + .folder { margin-top: calc(var(--gap) - var(--fh)); }
 .folder-tab {
   position: absolute;
-  top: -1.75rem;
+  top: calc(0.05rem - var(--tab));
   left: calc(var(--tab-left) + 0.6rem);
   width: 31%;
-  height: 1.8rem;
+  height: var(--tab);
   display: flex;
   align-items: center;
   padding: 0 0.8rem;
@@ -1093,7 +1095,7 @@ details.class-notes[open] { gap: 0.6rem; }
 }
 
 @media (max-width: 600px) {
-  .cabinet { --fh: 8.6rem; --lift: 5.8rem; }
+  .cabinet { --lift: 8.4rem; --fh: 11.4rem; }
   .drawer { padding: 2rem 0.7rem 0; }
   .folder-tab { width: 46%; left: calc(var(--tab-left) / 1.5 + 0.3rem); font-size: 0.9rem; }
   .folder-body { padding-left: 0.8rem; padding-right: 0.8rem; }
