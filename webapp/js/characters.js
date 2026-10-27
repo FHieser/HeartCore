@@ -1077,7 +1077,7 @@ function renderSheet() {
     return `
       <section class="domains-intro">
         <p class="eyebrow">HeartCore</p>
-        <h1>Characters</h1>
+        <h1>Character Creator</h1>
         <p class="lede">Create a character, track HP, Stress, Hope and Armor during play, and level up to 4. Characters are saved in this browser; export them as a code to move them, or as a PDF to print.</p>
         <div class="btn-row"><button class="btn primary" data-act="new">New character</button><button class="btn" data-act="import">Import code</button></div>
       </section>`;

@@ -1001,7 +1001,15 @@ details.class-notes[open] { gap: 0.6rem; }
    --lift must exceed contents height + tab height (--tab), so the contents end above the tab of
    the folder in front; --fh must be at least --gap + --lift, so no gap opens below a lifted folder. */
 
-.cabinet { --tab: 1.8rem; --gap: 2.5rem; --lift: 6.8rem; --fh: 9.8rem; max-width: 860px; margin: 1.5rem auto 0; padding-top: var(--lift); }
+.cabinet {
+  --tab: 1.8rem; --gap: 2.5rem; --lift: 6.8rem; --fh: 9.8rem;
+  max-width: 860px;
+  margin: 0 auto;
+  padding-top: calc(var(--lift) - 2.2rem);   /* room for the first folder to rise (minus the drawer's own top padding) */
+  /* Cut off whatever reaches below the drawer front (the lower part of the front folders),
+     but leave the top open so lifted folders can rise out of the drawer. */
+  clip-path: inset(-100vh -10vw 0 -10vw);
+}
 .drawer {
   position: relative;
   padding: 2.2rem 1.4rem 0;

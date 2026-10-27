@@ -303,7 +303,7 @@ function domainColor(id, index = 0) {
 
 // ---------- Shared chrome ----------
 
-const NAV = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['mechanics', 'rest.html', 'Mechanics'], ['characters', 'characters.html', 'Characters']];
+const NAV = [['overview', 'index.html', 'Overview'], ['domains', 'domains.html', 'Domains'], ['classes', 'classes.html', 'Classes'], ['mechanics', 'rest.html', 'Mechanics'], ['characters', 'characters.html', 'Character Creator']];
 const MECHANICS_NAV = [['rest', 'rest.html', 'Rest'], ['equipment', 'equipment.html', 'Equipment'], ['ailments', 'ailments.html', 'Ailments']];
 
 // Top tabs; the three mechanics pages share the "Mechanics" tab and get a sub-tab bar.
@@ -392,9 +392,6 @@ async function initOverview() {
         <div class="lede prose">${renderProse(intro)}</div>
       </section>
 
-      ${sections['Design Pillars'] ? `
-        <h2>Design Pillars</h2>
-        <div class="prose">${renderProse(sections['Design Pillars'])}</div>` : ''}
 
       <h2>Archive</h2>
       ${renderCabinet([
@@ -410,8 +407,8 @@ async function initOverview() {
         ailments && { href: 'ailments.html', tab: 'Ailments', file: 'File 05', title: 'Physical & Stress ailments',
           count: plural(ailments.tables.reduce((n, t) => n + t.entries.length, 0), 'ailment'),
           chips: ailments.tables.map(t => [t.name, t.color]) },
-        { href: 'characters.html', tab: 'Characters', file: 'File 06', title: 'Character creator', count: 'saved in your browser',
-          chips: [['Create, track, level up, export']] },
+        { href: 'characters.html', tab: 'Character Creator', file: 'File 06', title: 'Create, track and level up characters', count: 'saved in your browser',
+          chips: [['Export as code or PDF']] },
       ].filter(Boolean))}
     `;
   } catch (err) {
