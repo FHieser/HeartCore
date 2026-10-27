@@ -343,20 +343,18 @@ function domainTags(ids, domains) {
 // ---------- Overview page ----------
 
 // The links to the other areas as folders in a filing cabinet drawer. Folders stand one behind
-// another with staggered tabs; hovering or focusing one pulls it up and out of the drawer.
+// another with staggered tabs; only the tab and the folder edge show. Hovering or focusing a
+// folder pulls it up: it stays behind the folders in front, and the part that clears them
+// reveals its contents (description, count, chips).
 function renderCabinet(folders) {
-  const tabs = folders.length;
   return `
     <section class="cabinet" aria-label="Archive">
       <div class="drawer">
         ${folders.map((f, i) => `
-          <a class="folder" href="${f.href}" style="--i:${i};--tab-left:${(i % 3) * 33}%;z-index:${i + 1}">
+          <a class="folder" href="${f.href}" style="--tab-left:${(i % 3) * 33}%" aria-label="${escapeHtml(`${f.tab}: ${f.title}`)}">
             <span class="folder-tab">${escapeHtml(f.tab)}</span>
             <span class="folder-body">
-              <span class="folder-head">
-                <span class="eyebrow">${escapeHtml(f.file)} · ${escapeHtml(f.count)}</span>
-                <span class="folder-title">${escapeHtml(f.title)} →</span>
-              </span>
+              <span class="folder-desc">${escapeHtml(f.title)} <span class="eyebrow">· ${escapeHtml(f.count)}</span></span>
               <span class="link-field-domains">
                 ${f.chips.map(([label, color]) => `<span style="--domain:${color || '#5d5545'}">${escapeHtml(label)}</span>`).join('')}
               </span>
@@ -364,7 +362,7 @@ function renderCabinet(folders) {
           </a>`).join('')}
       </div>
       <div class="drawer-front" aria-hidden="true">
-        <span class="drawer-label">HeartCore · ${tabs} files</span>
+        <span class="drawer-label">HeartCore · ${folders.length} files</span>
         <span class="drawer-handle"></span>
       </div>
     </section>`;
